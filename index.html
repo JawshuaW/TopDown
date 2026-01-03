@@ -488,6 +488,7 @@
       <div class="meta">
         <div class="row"><span>Save</span><strong id="saveState">—</strong></div>
         <div class="row"><span>Action</span><strong id="actionState">Idle</strong></div>
+        <div class="row"><span>Status</span><strong id="jailState">Free</strong></div>
         <div class="row"><span>Tip</span><strong id="tipLine">Keep heat low.</strong></div>
       </div>
     </aside>
@@ -768,6 +769,43 @@
       { id: "decoy", name: "Decoy Chase", sec: 70, cost: 620, reduce: 52, desc: "Send the heat in the wrong direction." },
       { id: "ghost", name: "Ghost Protocol", sec: 95, cost: 1300, reduce: 100, desc: "Darken comms and vanish for a while." },
     ];
+    const HEAT_MODULES = [
+      { id: "mist", name: "Mist Protocol", cost: 900, durationSec: 90, reducePerSec: 0.28, desc: "Low-and-slow scrubbers that cool heat over time." },
+      { id: "alibi", name: "Alibi Network", cost: 1600, durationSec: 120, reducePerSec: 0.38, desc: "A web of cover stories that quietly bleeds off heat." },
+      { id: "blackout", name: "Comms Blackout", cost: 2600, durationSec: 160, reducePerSec: 0.55, desc: "Shut down chatter to cool heat faster." },
+    ];
+    const HEAT_UPGRADES = [
+      {
+        id: "cooling",
+        name: "Cooling Efficiency",
+        maxLevel: 5,
+        baseCost: 800,
+        costMult: 1.45,
+        pointsCost: 1,
+        effect: (lvl) => ({ heatOvertimeMult: 0.12 * lvl }),
+        desc: "Improves all heat-over-time cooling rates.",
+      },
+      {
+        id: "duration",
+        name: "Buffer Tanks",
+        maxLevel: 4,
+        baseCost: 1000,
+        costMult: 1.55,
+        pointsCost: 1,
+        effect: (lvl) => ({ heatOvertimeDuration: 0.15 * lvl }),
+        desc: "Extends the duration of cooling modules.",
+      },
+      {
+        id: "impact",
+        name: "Rapid Extraction",
+        maxLevel: 3,
+        baseCost: 1400,
+        costMult: 1.6,
+        pointsCost: 2,
+        effect: (lvl) => ({ heatActionBonus: 0.06 * lvl }),
+        desc: "Heat actions remove more heat instantly.",
+      },
+    ];
     // ---------- State ----------
     const STORAGE_KEY = "neon_underworld_v1";
     const DEFAULT_STATE = () => ({
@@ -794,6 +832,11 @@
       equipped: { weaponId: null },
       bonuses: [], // {id, name, endsAt, effect}
       action: null, // {type, id, name, startedAt, endsAt}
+      heatModules: [],
+      heatUpgrades: HEAT_UPGRADES.reduce((acc, u) => (acc[u.id] = { level: 0 }, acc), {}),
+      heatPoints: 0,
+      jail: { endsAt: 0, strikes: 0 },
+      fineCooldownUntil: 0,
       ui: { page: "dashboard", imperiumTab: "training" },
     });
     let state = loadState();
@@ -812,6 +855,11 @@
         s.inventory.consumables = { ...(DEFAULT_STATE().inventory.consumables), ...((parsed.inventory||{}).consumables || {}) };
         s.equipped = { ...DEFAULT_STATE().equipped, ...(parsed.equipped || {}) };
         s.bonuses = Array.isArray(parsed.bonuses) ? parsed.bonuses : [];
+        s.heatModules = Array.isArray(parsed.heatModules) ? parsed.heatModules : [];
+        s.heatUpgrades = { ...DEFAULT_STATE().heatUpgrades, ...(parsed.heatUpgrades || {}) };
+        s.heatPoints = Number.isFinite(parsed.heatPoints) ? parsed.heatPoints : 0;
+        s.jail = { ...DEFAULT_STATE().jail, ...(parsed.jail || {}) };
+        s.fineCooldownUntil = parsed.fineCooldownUntil || 0;
         s.ui = { ...DEFAULT_STATE().ui, ...(parsed.ui || {}) };
         return s;
       } catch {
@@ -863,6 +911,7 @@
         moneyMult: 0, repMult: 0, heatGainMult: 0, heatReduceMult: 0,
         marketDiscount: 0, trainingSpeed: 0, jobSpeed: 0, weaponPowerMult: 0,
         passivePerMin: 0, crewSlots: 0, combat: 0,
+        heatOvertimeMult: 0, heatOvertimeDuration: 0, heatActionBonus: 0,
       };
       for (const s of SKILLS) {
         const lvl = getSkillLevel(s.key);
@@ -885,6 +934,12 @@
       for (const b of getActiveBonuses()) {
         for (const [k,v] of Object.entries(b.effect || {})) mods[k] = (mods[k] || 0) + v;
       }
+      for (const u of HEAT_UPGRADES) {
+        const lvl = state.heatUpgrades?.[u.id]?.level || 0;
+        if (!lvl) continue;
+        const e = u.effect(lvl);
+        for (const [k,v] of Object.entries(e)) mods[k] = (mods[k] || 0) + v;
+      }
       const levelMomentum = getLevelMomentum();
       const repMomentum = getRepMomentum();
       const heatPressure = getHeatPressure();
@@ -897,6 +952,9 @@
       mods.jobSpeed = clamp(mods.jobSpeed, 0, 0.35);
       mods.heatGainMult = clamp(mods.heatGainMult, -0.60, 0.25);
       mods.heatReduceMult = clamp(mods.heatReduceMult, 0, 0.80);
+      mods.heatOvertimeMult = clamp(mods.heatOvertimeMult, 0, 0.8);
+      mods.heatOvertimeDuration = clamp(mods.heatOvertimeDuration, 0, 1.0);
+      mods.heatActionBonus = clamp(mods.heatActionBonus, 0, 0.5);
       return mods;
     }
     function getActiveCrewSlots() {
@@ -922,6 +980,21 @@
       if (heat < 70) return { name: "Hot", cls: "warnTxt", dot: "dot warn" };
       return { name: "Blazing", cls: "dangerTxt", dot: "dot bad" };
     }
+    function isJailed() {
+      return (state.jail?.endsAt || 0) > now();
+    }
+    function jailTimeLeft() {
+      return Math.max(0, ((state.jail?.endsAt || 0) - now()) / 1000);
+    }
+    function heatUpgradeCost(id) {
+      const u = HEAT_UPGRADES.find(x => x.id === id);
+      const lvl = state.heatUpgrades?.[id]?.level || 0;
+      if (!u) return 0;
+      return Math.floor(u.baseCost * Math.pow(u.costMult, lvl));
+    }
+    function addHeatPoints(amount) {
+      state.heatPoints = Math.max(0, state.heatPoints + amount);
+    }
     function getHeatPressure() {
       return clamp((state.heat - 25) / 95, 0, 0.35);
     }
@@ -941,10 +1014,13 @@
       const dtSec = Math.floor(Math.max(0, t - last) / 1000);
       if (dtSec <= 2) return;
       pruneExpiredBonuses();
+      if (state.jail?.endsAt && state.jail.endsAt <= t) {
+        state.jail.endsAt = 0;
+      }
       const mods = getCombinedMods();
       const passivePerMin = mods.passivePerMin || 0;
       const netPerMin = passivePerMin - upkeepPerMin();
-      if (netPerMin !== 0) {
+      if (!isJailed() && netPerMin !== 0) {
         const mins = dtSec / 60;
         state.money = Math.max(0, state.money + netPerMin * mins);
       }
@@ -984,6 +1060,7 @@
     }
     // ---------- Actions ----------
     function startAction(action) {
+      if (isJailed()) return toast("Locked up.", "Wait out your sentence.", "bad");
       if (state.action) return toast("Busy.", "Finish the current action first.", "warn");
       state.action = action;
       const a = document.getElementById("actionState");
@@ -1021,13 +1098,10 @@
           gainRep(repGain);
           gainHeat(heatGain);
           addXp(Math.max(2, Math.floor(payout / 420)));
-          if (state.heat >= 90 && Math.random() < 0.18) {
-            const fine = Math.floor(payout * 0.22);
-            state.money = Math.max(0, state.money - fine);
-            toast("Heat backlash.", `A sting cost you ${money(fine)}.`, "bad");
-          } else {
-            const via = offline ? " (offline)" : "";
-            toast("Job completed" + via, `+${money(payout)} • +${repGain} Rep • +${heatGain} Heat`, "good");
+          const via = offline ? " (offline)" : "";
+          toast("Job completed" + via, `+${money(payout)} • +${repGain} Rep • +${heatGain} Heat`, "good");
+          if (state.heat >= 100) {
+            toast("Heat critical.", "Pay the fine or face jail time.", "warn");
           }
           addSkillXp("hustle", Math.max(2, Math.floor(job.sec / 10)));
           addSkillXp("renown", Math.max(1, Math.floor(repGain / 5)));
@@ -1045,7 +1119,7 @@
         const a = HEAT_ACTIONS.find(x => x.id === action.id);
         if (a) {
           const mods = getCombinedMods();
-          let reduce = Math.floor(a.reduce * (1 + (mods.heatReduceMult || 0)));
+          let reduce = Math.floor(a.reduce * (1 + (mods.heatReduceMult || 0) + (mods.heatActionBonus || 0)));
           reduceHeat(reduce);
           if (a.id === "burn" && Math.random() < 0.22) {
             const loss = 6;
@@ -1054,6 +1128,7 @@
           } else {
             toast(offline ? "Heat cooled (offline)" : "Heat cooled", `Heat -${reduce}.`, "good");
           }
+          addHeatPoints(Math.max(1, Math.floor(reduce / 25)));
           addSkillXp("heatwise", 10);
           addSkillXp("stealth", 8);
         }
@@ -1103,6 +1178,36 @@
       const left = Math.max(0, (state.action.endsAt - t) / 1000);
       el.textContent = `${state.action.type.toUpperCase()} • ${secondsToHMS(left)} remaining`;
     }
+    function updateJailStateLive() {
+      const js = document.getElementById("jailState");
+      if (!js) return;
+      js.textContent = isJailed() ? `Jailed (${secondsToHMS(jailTimeLeft())})` : "Free";
+    }
+    function handleHeatFines() {
+      const t = now();
+      if (state.heat < 100 || isJailed()) return;
+      if (t < (state.fineCooldownUntil || 0)) return;
+      const fine = Math.max(600, Math.floor(state.money * 0.12 + state.heat * 30));
+      if (state.money >= fine) {
+        pay(fine);
+        reduceHeat(22);
+        state.fineCooldownUntil = t + 45000;
+        toast("Heat crackdown.", `Paid ${money(fine)} to avoid jail.`, "warn");
+        return;
+      }
+      const strikes = (state.jail?.strikes || 0) + 1;
+      const sentence = 90 + strikes * 45;
+      state.jail = { endsAt: t + sentence * 1000, strikes };
+      state.fineCooldownUntil = t + 30000;
+      if (state.action) cancelAction();
+      toast("Jailed.", `Sentence ${secondsToHMS(sentence)} • Strike ${strikes}/3`, "bad");
+      if (strikes >= 3) {
+        toast("Game over.", "Three strikes. Your empire collapses.", "bad");
+        state = DEFAULT_STATE();
+      }
+      saveState();
+      renderAll();
+    }
     // ---------- Lightweight data-binding ----------
     const bindings = [];
     const bindingGetters = {
@@ -1113,6 +1218,9 @@
       xp: () => state.xp,
       xpNeed: () => levelXpNeed(state.level),
       influence: () => getInfluence(),
+      heatPoints: () => state.heatPoints || 0,
+      jailStrikes: () => state.jail?.strikes || 0,
+      jailTimeLeft: () => jailTimeLeft(),
       combatPower: () => getCombatPower(),
       crewSlots: () => getActiveCrewSlots(),
       activeCrew: () => state.crew.active.length,
@@ -1131,6 +1239,9 @@
       heatPressure: () => getHeatPressure(),
       levelMomentum: () => getLevelMomentum(),
       repMomentum: () => getRepMomentum(),
+      heatOvertimeMult: () => getCombinedMods().heatOvertimeMult || 0,
+      heatOvertimeDuration: () => getCombinedMods().heatOvertimeDuration || 0,
+      heatActionBonus: () => getCombinedMods().heatActionBonus || 0,
       heatTierName: () => heatTier(state.heat).name,
       heatClass: () => heatTier(state.heat).cls,
       heatDotClass: () => heatTier(state.heat).dot,
@@ -1180,7 +1291,17 @@
       const mods = getCombinedMods();
       const passivePerMin = mods.passivePerMin || 0;
       const netPerMin = passivePerMin - upkeepPerMin();
-      if (netPerMin !== 0) state.money = Math.max(0, state.money + (netPerMin / 60) * dt);
+      if (!isJailed() && netPerMin !== 0) state.money = Math.max(0, state.money + (netPerMin / 60) * dt);
+      if (state.heatModules?.length) {
+        const overtimeMult = 1 + (mods.heatOvertimeMult || 0);
+        const t = now();
+        state.heatModules = state.heatModules.filter((m) => {
+          if (m.endsAt <= t) return false;
+          const rate = (m.reducePerSec || 0) * overtimeMult;
+          if (rate > 0) reduceHeat(rate * dt);
+          return true;
+        });
+      }
       if (state.action && state.action.endsAt <= t) completeAction(state.action);
       if (!state.action && state.heat > 0) {
         const heatPressure = getHeatPressure();
@@ -1190,6 +1311,7 @@
         const decay = baseDecay * decayBoost * decayPenalty * dt;
         state.heat = clamp(state.heat - decay, 0, 120);
       }
+      handleHeatFines();
       renderHud();
       renderActionStrip();
       autosaveMaybe();
@@ -1206,6 +1328,7 @@
       updateActionPanelLive();
       updateCountdownsLive();
       updateActionStripLive();
+      updateJailStateLive();
       applyBindings();
       requestAnimationFrame(uiLoop);
     }
@@ -1261,6 +1384,10 @@
     function renderActionStrip() {
       const el = document.getElementById("tipLine");
       if (!el) return;
+      if (isJailed()) {
+        el.textContent = `In jail • ${secondsToHMS(jailTimeLeft())} remaining`;
+        return;
+      }
       if (!state.action) {
         const ht = heatTier(state.heat);
         if (state.heat > 70) el.textContent = "Heat is blazing. Run Heat Control.";
@@ -1486,14 +1613,14 @@
       bindActionPanel(root);
     }
     function renderJobItem(job, groupLocked, mods) {
-      const locked = groupLocked || state.rep < (job.req?.rep ?? 0);
+      const locked = groupLocked || state.rep < (job.req?.rep ?? 0) || isJailed();
       const speed = 1 + (mods.jobSpeed || 0);
       const sec = Math.max(6, Math.floor(job.sec / speed));
       const payout = Math.floor(job.money * (1 + (mods.moneyMult || 0)));
       const repGain = Math.floor(job.rep * (1 + (mods.repMult || 0)));
       const heatGain = Math.ceil(job.heat * (1 + (mods.heatGainMult || 0)));
       const dangerTag = heatGain >= 30 ? `<span class="dangerTxt">High Heat</span>` : heatGain >= 15 ? `<span class="warnTxt">Medium Heat</span>` : `<span class="goodTxt">Low Heat</span>`;
-      const isBusy = !!state.action;
+      const isBusy = !!state.action || isJailed();
       return `
         <div class="item">
           <div class="left">
@@ -1512,7 +1639,7 @@
           </div>
           <div class="actions">
             <button class="btn ${heatGain >= 30 ? "danger" : ""}" data-job="${job.id}" ${locked || isBusy ? "disabled" : ""}>
-              ${locked ? `Locked` : isBusy ? "Busy" : "Run Job"}
+              ${isJailed() ? "Locked" : locked ? `Locked` : isBusy ? "Busy" : "Run Job"}
             </button>
           </div>
         </div>
@@ -1559,6 +1686,7 @@
           const jobId = btn.dataset.job;
           const job = findJob(jobId);
           if (!job) return;
+          if (isJailed()) return toast("Locked up.", "Wait out your sentence.", "bad");
           if (state.action) return toast("Busy.", "Finish the current action first.", "warn");
           if (state.rep < (job.req?.rep ?? 0)) return toast("Locked.", "Earn more Rep first.", "warn");
           const mods = getCombinedMods();
@@ -1588,6 +1716,9 @@
         passivePerMin: (v) => `Passive ${money(v)}/min`,
         crewSlots: (v) => `Crew Slots +${fmt.format(v)}`,
         combat: (v) => `Combat +${fmt.format(v)}`,
+        heatOvertimeMult: (v) => `Cooling +${pct(v)}`,
+        heatOvertimeDuration: (v) => `Cooling Duration +${pct(v)}`,
+        heatActionBonus: (v) => `Heat Action +${pct(v)}`,
       };
       const fn = map[key];
       return fn ? fn(value) : `${key} ${value}`;
@@ -1632,7 +1763,7 @@
         <div class="items">
           ${TRAININGS.map(t => {
             const sec = Math.max(10, Math.floor(t.sec / speed));
-            const locked = state.action !== null;
+            const locked = state.action !== null || isJailed();
             const affordable = canAfford(t.cost);
             return `
               <div class="item">
@@ -1650,7 +1781,7 @@
                 </div>
                 <div class="actions">
                   <button class="btn ${affordable ? "" : "secondary"}" data-train="${t.id}" ${locked || !affordable ? "disabled" : ""}>
-                    ${locked ? "Busy" : affordable ? "Train" : "Need funds"}
+                    ${isJailed() ? "Locked" : locked ? "Busy" : affordable ? "Train" : "Need funds"}
                   </button>
                 </div>
               </div>
@@ -1663,6 +1794,7 @@
         btn.onclick = () => {
           const t = TRAININGS.find(x => x.id === btn.dataset.train);
           if (!t) return;
+          if (isJailed()) return toast("Locked up.", "Wait out your sentence.", "bad");
           if (state.action) return toast("Busy.", "Finish the current action first.", "warn");
           if (!canAfford(t.cost)) return toast("Not enough money.", "Run more jobs.", "warn");
           const mods = getCombinedMods();
@@ -1682,7 +1814,7 @@
           ${HIDEOUT.map(u => {
             const lvl = getHideoutLevel(u.id);
             const cost = hideoutCost(u.id);
-            const locked = state.action !== null;
+            const locked = state.action !== null || isJailed();
             const affordable = canAfford(cost);
             const effect = u.effect(lvl + 1);
             const effectLine = Object.entries(effect).map(([k,v]) => formatEffect(k, v)).join(" • ");
@@ -1701,7 +1833,7 @@
                 </div>
                 <div class="actions">
                   <button class="btn good" data-up="${u.id}" ${locked || !affordable ? "disabled" : ""}>
-                    ${locked ? "Busy" : affordable ? "Upgrade" : "Need funds"}
+                    ${isJailed() ? "Locked" : locked ? "Busy" : affordable ? "Upgrade" : "Need funds"}
                   </button>
                 </div>
               </div>
@@ -1721,6 +1853,7 @@
         btn.onclick = () => {
           const id = btn.dataset.up;
           const cost = hideoutCost(id);
+          if (isJailed()) return toast("Locked up.", "Wait out your sentence.", "bad");
           if (state.action) return toast("Busy.", "Finish the current action first.", "warn");
           if (!canAfford(cost)) return toast("Not enough money.", "Earn more cash.", "warn");
           pay(cost);
@@ -1740,6 +1873,7 @@
       const slots = getActiveCrewSlots();
       const owned = new Set(state.crew.owned);
       const active = new Set(state.crew.active);
+      const lockedGlobal = isJailed();
       body.innerHTML = `
         <div class="small">
           Recruit bodyguards for passive boosts. Active slots: <span class="mono" data-bind="crewSlots" data-format="int"></span>.
@@ -1783,7 +1917,7 @@
                 const c = CREW.find(x => x.id === id);
                 if (!c) return "";
                 const isActive = active.has(id);
-                const canActivate = isActive || state.crew.active.length < slots;
+                const canActivate = (isActive || state.crew.active.length < slots) && !lockedGlobal;
                 return `
                   <div class="item" style="grid-column:span 12">
                     <div class="left">
@@ -1799,7 +1933,7 @@
                     </div>
                     <div class="actions">
                       <button class="btn ${isActive ? "secondary" : "good"}" data-toggle="${id}" ${canActivate ? "" : "disabled"}>
-                        ${isActive ? "Deactivate" : "Activate"}
+                        ${lockedGlobal ? "Locked" : isActive ? "Deactivate" : "Activate"}
                       </button>
                     </div>
                   </div>
@@ -1814,7 +1948,7 @@
           ${CREW.map(c => {
             const isOwned = owned.has(c.id);
             const can = state.rep >= c.repReq && canAfford(c.cost);
-            const locked = state.action !== null;
+            const locked = state.action !== null || lockedGlobal;
             return `
               <div class="item">
                 <div class="left">
@@ -1832,7 +1966,7 @@
                 </div>
                 <div class="actions">
                   <button class="btn" data-recruit="${c.id}" ${locked || isOwned || !can ? "disabled" : ""}>
-                    ${isOwned ? "Owned" : locked ? "Busy" : can ? "Recruit" : "Locked"}
+                    ${lockedGlobal ? "Locked" : isOwned ? "Owned" : locked ? "Busy" : can ? "Recruit" : "Locked"}
                   </button>
                 </div>
               </div>
@@ -1846,6 +1980,7 @@
           const id = btn.dataset.recruit;
           const c = CREW.find(x => x.id === id);
           if (!c) return;
+          if (isJailed()) return toast("Locked up.", "Wait out your sentence.", "bad");
           if (state.action) return toast("Busy.", "Finish the current action first.", "warn");
           if (state.crew.owned.includes(id)) return toast("Already owned.", "", "warn");
           if (state.rep < c.repReq) return toast("Rep too low.", "Run higher-tier jobs.", "warn");
@@ -1864,6 +1999,7 @@
           const id = btn.dataset.toggle;
           const idx = state.crew.active.indexOf(id);
           const slots = getActiveCrewSlots();
+          if (isJailed()) return toast("Locked up.", "Wait out your sentence.", "bad");
           if (idx >= 0) {
             state.crew.active.splice(idx, 1);
             toast("Crew deactivated.", "", "info");
@@ -1883,6 +2019,7 @@
         .map(([id,qty]) => ({ w: WEAPONS.find(x=>x.id===id), qty }))
         .filter(x => x.w);
       const eq = state.equipped.weaponId;
+      const lockedGlobal = isJailed();
       body.innerHTML = `
         <div class="small">Weapons raise Combat Power. Some items also synergize with Armory Rack upgrades.</div>
         <div class="divider"></div>
@@ -1907,7 +2044,7 @@
                 </div>
               </div>
               <div class="actions">
-                <button class="btn ${eq === w.id ? "secondary" : ""}" data-equip="${w.id}">${eq === w.id ? "Unequip" : "Equip"}</button>
+                <button class="btn ${eq === w.id ? "secondary" : ""}" data-equip="${w.id}" ${lockedGlobal ? "disabled" : ""}>${lockedGlobal ? "Locked" : eq === w.id ? "Unequip" : "Equip"}</button>
               </div>
             </div>
           `).join("") : `<div class="small muted">No weapons owned. Visit Market to buy.</div>`}
@@ -1919,6 +2056,7 @@
       body.querySelector("#toMarket").onclick = () => setImperiumTab("market");
       body.querySelectorAll("button[data-equip]").forEach(btn => {
         btn.onclick = () => {
+          if (isJailed()) return toast("Locked up.", "Wait out your sentence.", "bad");
           const id = btn.dataset.equip;
           state.equipped.weaponId = (state.equipped.weaponId === id) ? null : id;
           saveState();
@@ -1928,19 +2066,21 @@
     }
     function renderHeat(body) {
       const mods = getCombinedMods();
+      const lockedGlobal = isJailed();
       body.innerHTML = `
         <div class="small">Heat Control reduces your Heat. Stealth improves effectiveness by <span class="mono" data-bind="heatReduceMult" data-format="pct"></span>.</div>
         <div class="divider"></div>
         <div class="chipRow">
           <span class="chip">Heat: <span class="mono" data-bind="heat" data-format="float1" data-class-bind="heatClass" data-base-class="mono"></span></span>
           <span class="chip">Heat Tier: <span class="mono" data-bind="heatTierName"></span></span>
+          <span class="chip">Heat Points: <span class="mono" data-bind="heatPoints" data-format="int"></span></span>
         </div>
         <div class="divider"></div>
         <div class="items">
           ${HEAT_ACTIONS.map(a => {
-            const locked = !!state.action;
+            const locked = !!state.action || lockedGlobal;
             const ok = canAfford(a.cost);
-            const projected = Math.floor(a.reduce * (1 + (mods.heatReduceMult || 0)));
+            const projected = Math.floor(a.reduce * (1 + (mods.heatReduceMult || 0) + (mods.heatActionBonus || 0)));
             return `
               <div class="item">
                 <div class="left">
@@ -1957,7 +2097,91 @@
                 </div>
                 <div class="actions">
                   <button class="btn danger" data-heat="${a.id}" ${locked || !ok ? "disabled" : ""}>
-                    ${locked ? "Busy" : ok ? "Run" : "Need funds"}
+                    ${lockedGlobal ? "Locked" : locked ? "Busy" : ok ? "Run" : "Need funds"}
+                  </button>
+                </div>
+              </div>
+            `;
+          }).join("")}
+        </div>
+        <div class="divider"></div>
+        <h3>Heat Control Store</h3>
+        <div class="items">
+          ${HEAT_MODULES.map(m => {
+            const duration = Math.floor(m.durationSec * (1 + (mods.heatOvertimeDuration || 0)));
+            const rate = m.reducePerSec * (1 + (mods.heatOvertimeMult || 0));
+            const ok = canAfford(m.cost);
+            return `
+              <div class="item">
+                <div class="left">
+                  <div class="badge">${icon("M12 5v14M5 12h14")}</div>
+                  <div>
+                    <h4>${escapeHtml(m.name)}</h4>
+                    <div class="desc">${escapeHtml(m.desc)}</div>
+                    <div class="metaLine">
+                      <span>Cost ${money(m.cost)}</span>
+                      <span>Duration ${secondsToHMS(duration)}</span>
+                      <span class="goodTxt">-${fmt1.format(rate)}/sec</span>
+                    </div>
+                  </div>
+                </div>
+                <div class="actions">
+                  <button class="btn good" data-module="${m.id}" ${lockedGlobal || !ok ? "disabled" : ""}>
+                    ${lockedGlobal ? "Locked" : ok ? "Activate" : "Need funds"}
+                  </button>
+                </div>
+              </div>
+            `;
+          }).join("")}
+        </div>
+        <div class="divider"></div>
+        <h3>Active Cooling</h3>
+        <div class="items">
+          ${state.heatModules?.length ? state.heatModules.map(m => `
+            <div class="item">
+              <div class="left">
+                <div class="badge">${icon("M12 4v16M4 12h16")}</div>
+                <div>
+                  <h4>${escapeHtml(m.name)}</h4>
+                  <div class="desc">Cooling over time.</div>
+                  <div class="metaLine">
+                    <span>Ends in <span class="mono" data-countdown-ends="${m.endsAt}">${secondsToHMS((m.endsAt - now())/1000)}</span></span>
+                  </div>
+                </div>
+              </div>
+              <div class="actions">
+                <button class="btn secondary" data-cancel-module="${m.id}">Dismiss</button>
+              </div>
+            </div>
+          `).join("") : `<div class="small muted">No active cooling modules.</div>`}
+        </div>
+        <div class="divider"></div>
+        <h3>Heat Control Skills</h3>
+        <div class="items">
+          ${HEAT_UPGRADES.map(u => {
+            const lvl = state.heatUpgrades?.[u.id]?.level || 0;
+            const cost = heatUpgradeCost(u.id);
+            const canLevel = lvl < u.maxLevel;
+            const canAffordUpgrade = canAfford(cost) && state.heatPoints >= u.pointsCost;
+            const next = u.effect(lvl + 1);
+            const effectLine = Object.entries(next).map(([k,v]) => formatEffect(k, v)).join(" • ");
+            return `
+              <div class="item">
+                <div class="left">
+                  <div class="badge">${icon("M12 3l7 4v5c0 5-3.5 8.5-7 9-3.5-.5-7-4-7-9V7l7-4Z")}</div>
+                  <div>
+                    <h4>${escapeHtml(u.name)} <span class="pill">Lv ${lvl}/${u.maxLevel}</span></h4>
+                    <div class="desc">${escapeHtml(u.desc)}</div>
+                    <div class="metaLine">
+                      <span>Cost ${money(cost)}</span>
+                      <span>Heat Points ${u.pointsCost}</span>
+                      <span>Next: ${escapeHtml(effectLine)}</span>
+                    </div>
+                  </div>
+                </div>
+                <div class="actions">
+                  <button class="btn" data-heat-up="${u.id}" ${lockedGlobal || !canLevel || !canAffordUpgrade ? "disabled" : ""}>
+                    ${lockedGlobal ? "Locked" : !canLevel ? "Maxed" : canAffordUpgrade ? "Upgrade" : "Need points"}
                   </button>
                 </div>
               </div>
@@ -1970,15 +2194,63 @@
         btn.onclick = () => {
           const a = HEAT_ACTIONS.find(x => x.id === btn.dataset.heat);
           if (!a) return;
+          if (isJailed()) return toast("Locked up.", "Wait out your sentence.", "bad");
           if (state.action) return toast("Busy.", "Finish the current action first.", "warn");
           if (!canAfford(a.cost)) return toast("Not enough money.", "Earn more cash.", "warn");
           pay(a.cost);
           startAction({ type: "heat", id: a.id, name: `Heat Control: ${a.name}`, startedAt: now(), endsAt: now() + a.sec * 1000 });
         };
       });
+      body.querySelectorAll("button[data-module]").forEach(btn => {
+        btn.onclick = () => {
+          const m = HEAT_MODULES.find(x => x.id === btn.dataset.module);
+          if (!m) return;
+          if (isJailed()) return toast("Locked up.", "Wait out your sentence.", "bad");
+          if (!canAfford(m.cost)) return toast("Not enough money.", "Earn more cash.", "warn");
+          pay(m.cost);
+          const mods = getCombinedMods();
+          const duration = Math.floor(m.durationSec * (1 + (mods.heatOvertimeDuration || 0)));
+          state.heatModules.push({
+            id: `${m.id}_${Math.floor(Math.random() * 1e8)}`,
+            name: m.name,
+            endsAt: now() + duration * 1000,
+            reducePerSec: m.reducePerSec,
+          });
+          toast("Cooling active.", `${m.name} engaged.`, "good");
+          saveState();
+          renderAll();
+        };
+      });
+      body.querySelectorAll("button[data-heat-up]").forEach(btn => {
+        btn.onclick = () => {
+          const id = btn.dataset.heatUp;
+          const u = HEAT_UPGRADES.find(x => x.id === id);
+          if (!u) return;
+          if (isJailed()) return toast("Locked up.", "Wait out your sentence.", "bad");
+          const lvl = state.heatUpgrades?.[id]?.level || 0;
+          if (lvl >= u.maxLevel) return toast("Maxed out.", "", "warn");
+          const cost = heatUpgradeCost(id);
+          if (!canAfford(cost) || state.heatPoints < u.pointsCost) return toast("Need resources.", "Earn money and heat points.", "warn");
+          pay(cost);
+          state.heatPoints -= u.pointsCost;
+          state.heatUpgrades[id].level += 1;
+          toast("Heat skill upgraded.", `${u.name} is now Lv ${state.heatUpgrades[id].level}.`, "good");
+          saveState();
+          renderAll();
+        };
+      });
+      body.querySelectorAll("button[data-cancel-module]").forEach(btn => {
+        btn.onclick = () => {
+          if (isJailed()) return toast("Locked up.", "Wait out your sentence.", "bad");
+          state.heatModules = state.heatModules.filter(m => m.id !== btn.dataset.cancelModule);
+          saveState();
+          renderAll();
+        };
+      });
     }
     function renderMarket(body) {
       const mods = getCombinedMods();
+      const lockedGlobal = isJailed();
       const allItems = [
         ...WEAPONS.map(w => ({ ...w, kind: "weapon" })),
         ...CONSUMABLES.map(c => ({ ...c, kind: "consumable" })),
@@ -2010,11 +2282,11 @@
                   </div>
                 </div>
                 <div class="actions">
-                  <button class="btn" data-buy="${it.id}" data-kind="${it.kind}" ${lockedByRep || !affordable ? "disabled" : ""}>
-                    ${lockedByRep ? "Need Rep" : affordable ? "Buy" : "Need funds"}
+                  <button class="btn" data-buy="${it.id}" data-kind="${it.kind}" ${lockedGlobal || lockedByRep || !affordable ? "disabled" : ""}>
+                    ${lockedGlobal ? "Locked" : lockedByRep ? "Need Rep" : affordable ? "Buy" : "Need funds"}
                   </button>
                   ${it.kind === "consumable" ? `
-                    <button class="btn secondary" data-use="${it.id}" ${ownedQty <= 0 || state.action ? "disabled" : ""}>Use</button>
+                    <button class="btn secondary" data-use="${it.id}" ${lockedGlobal || ownedQty <= 0 || state.action ? "disabled" : ""}>Use</button>
                   ` : ""}
                 </div>
               </div>
@@ -2027,6 +2299,7 @@
         btn.onclick = () => {
           const id = btn.dataset.buy;
           const kind = btn.dataset.kind;
+          if (isJailed()) return toast("Locked up.", "Wait out your sentence.", "bad");
           if (kind === "weapon") {
             const w = WEAPONS.find(x => x.id === id);
             if (!w) return;
@@ -2059,6 +2332,7 @@
           const id = btn.dataset.use;
           const c = CONSUMABLES.find(x => x.id === id);
           if (!c) return;
+          if (isJailed()) return toast("Locked up.", "Wait out your sentence.", "bad");
           const qty = state.inventory.consumables[c.id] || 0;
           if (qty <= 0) return toast("None owned.", "Buy one first.", "warn");
           if (state.action) return toast("Busy.", "Finish the current action first.", "warn");
@@ -2122,6 +2396,9 @@
         <tr><td>Heat Pressure</td><td class="right mono" data-bind="heatPressure" data-format="pct"></td></tr>
         <tr><td>Level Momentum</td><td class="right mono">+<span data-bind="levelMomentum" data-format="pct"></span></td></tr>
         <tr><td>Rep Momentum</td><td class="right mono">+<span data-bind="repMomentum" data-format="pct"></span></td></tr>
+        <tr><td>Cooling Rate</td><td class="right mono">+<span data-bind="heatOvertimeMult" data-format="pct"></span></td></tr>
+        <tr><td>Cooling Duration</td><td class="right mono">+<span data-bind="heatOvertimeDuration" data-format="pct"></span></td></tr>
+        <tr><td>Heat Action Bonus</td><td class="right mono">+<span data-bind="heatActionBonus" data-format="pct"></span></td></tr>
         <tr><td>Passive Income/min</td><td class="right mono" data-bind="passivePerMin" data-format="money"></td></tr>
         <tr><td>Crew Upkeep/min</td><td class="right mono" data-bind="upkeepPerMin" data-format="money"></td></tr>
         <tr><td>Market Discount</td><td class="right mono" data-bind="marketDiscount" data-format="pct"></td></tr>
@@ -2139,6 +2416,8 @@
                 <tr><td>Rep</td><td class="right mono" data-bind="rep" data-format="int"></td></tr>
                 <tr><td>Influence</td><td class="right mono" data-bind="influence" data-format="int"></td></tr>
                 <tr><td>Heat</td><td class="right mono"><span data-bind="heat" data-format="float1"></span> (<span data-bind="heatTierName"></span>)</td></tr>
+                <tr><td>Heat Points</td><td class="right mono" data-bind="heatPoints" data-format="int"></td></tr>
+                <tr><td>Jail Strikes</td><td class="right mono" data-bind="jailStrikes" data-format="int"></td></tr>
               </tbody>
             </table>
           </div>
@@ -2227,6 +2506,8 @@
       if (ss) ss.textContent = "Auto";
       const as = document.getElementById("actionState");
       if (as) as.textContent = state.action ? state.action.name : "Idle";
+      const js = document.getElementById("jailState");
+      if (js) js.textContent = isJailed() ? `Jailed (${secondsToHMS(jailTimeLeft())})` : "Free";
       registerBindings(document);
       updateActionPanelLive();
       updateCountdownsLive();

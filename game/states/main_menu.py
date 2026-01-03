@@ -23,6 +23,11 @@ class MainMenuState(BaseMenuState, GameState):
     def _init_options(self) -> None:
         self.options = [
             MenuOption(
+                "Underboss Imperium",
+                lambda: self.app.state_machine.switch("underboss"),
+                "Rise through the criminal underworld in a new idle empire dashboard.",
+            ),
+            MenuOption(
                 "Begin Expedition",
                 self.start_new_game,
                 "Forge a new squad of three exiles and descend into procedural vaults.",

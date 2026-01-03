@@ -15,6 +15,7 @@ from game.states.skills_editor import SkillsEditorState
 from game.states.player_editor import PlayerEditorState
 from game.states.shop import ShopState
 from game.states.party import PartyManagementState
+from game.states.underboss import UnderbossState
 
 
 class GameApp:
@@ -52,6 +53,7 @@ class GameApp:
         self.state_machine.register("player_editor", PlayerEditorState)
         self.state_machine.register("shop", ShopState)
         self.state_machine.register("party", PartyManagementState)
+        self.state_machine.register("underboss", UnderbossState)
 
     def run(self) -> None:
         self.running = True

@@ -579,6 +579,8 @@
           { id: "shakedown", name: "Corner Shakedown", sec: 12, money: 120, rep: 2, heat: 4, req: { rep: 0 } },
           { id: "snatch", name: "Snatch & Grab", sec: 18, money: 210, rep: 3, heat: 6, req: { rep: 5 } },
           { id: "numbers", name: "Back-Alley Numbers", sec: 24, money: 320, rep: 4, heat: 7, req: { rep: 10 } },
+          { id: "pickpocket", name: "Crowd Pickpocket", sec: 16, money: 180, rep: 3, heat: 6, req: { rep: 6 } },
+          { id: "stash", name: "Stash Run", sec: 28, money: 380, rep: 5, heat: 8, req: { rep: 12 } },
         ],
       },
       {
@@ -590,6 +592,7 @@
           { id: "crate", name: "Lift a Crate", sec: 30, money: 520, rep: 6, heat: 9, req: { rep: 18 } },
           { id: "manifests", name: "Forge Manifests", sec: 45, money: 820, rep: 8, heat: 11, req: { rep: 28 } },
           { id: "shipment", name: "Reroute Shipment", sec: 60, money: 1200, rep: 10, heat: 14, req: { rep: 40 } },
+          { id: "warehouse", name: "Warehouse Sweep", sec: 75, money: 1500, rep: 12, heat: 16, req: { rep: 55 } },
         ],
       },
       {
@@ -601,6 +604,7 @@
           { id: "door", name: "Control the Door", sec: 50, money: 1350, rep: 10, heat: 12, req: { rep: 55 } },
           { id: "vip", name: "VIP Favors", sec: 75, money: 1900, rep: 13, heat: 15, req: { rep: 70 } },
           { id: "venue", name: "Venue Protection Deal", sec: 105, money: 2900, rep: 18, heat: 18, req: { rep: 95 } },
+          { id: "residency", name: "Residency Cut", sec: 120, money: 3600, rep: 22, heat: 20, req: { rep: 115 } },
         ],
       },
       {
@@ -612,6 +616,18 @@
           { id: "launder", name: "Launder a Slice", sec: 120, money: 4200, rep: 16, heat: 14, req: { rep: 120 } },
           { id: "insider", name: "Insider Tip", sec: 160, money: 5900, rep: 20, heat: 16, req: { rep: 150 } },
           { id: "shells", name: "Shell Company Maze", sec: 210, money: 8200, rep: 26, heat: 18, req: { rep: 195 } },
+          { id: "crypto", name: "Crypto Flip", sec: 140, money: 6900, rep: 22, heat: 16, req: { rep: 175 } },
+        ],
+      },
+      {
+        id: "syndicate",
+        name: "Syndicate Contracts",
+        unlock: { rep: 210 },
+        desc: "Regional contracts with steady payouts and serious scrutiny.",
+        jobs: [
+          { id: "supply", name: "Supply Line Cut", sec: 150, money: 8800, rep: 24, heat: 20, req: { rep: 210 } },
+          { id: "payload", name: "Payload Escort", sec: 200, money: 12800, rep: 30, heat: 24, req: { rep: 250 } },
+          { id: "arbitrage", name: "Hostile Arbitrage", sec: 230, money: 14600, rep: 34, heat: 26, req: { rep: 290 } },
         ],
       },
       {
@@ -623,6 +639,18 @@
           { id: "intercept", name: "Intercept Courier", sec: 170, money: 9800, rep: 26, heat: 26, req: { rep: 260 } },
           { id: "blackmail", name: "Blackmail a Minister", sec: 240, money: 14600, rep: 34, heat: 34, req: { rep: 320 } },
           { id: "vault", name: "Vault Night", sec: 330, money: 22000, rep: 44, heat: 48, req: { rep: 420 } },
+          { id: "cleaner", name: "Silent Cleanup", sec: 220, money: 15800, rep: 30, heat: 32, req: { rep: 300 } },
+        ],
+      },
+      {
+        id: "heists",
+        name: "High Heists",
+        unlock: { rep: 380 },
+        desc: "All-in moves. Huge payouts. Heat spikes hard.",
+        jobs: [
+          { id: "skyline", name: "Skyline Vault", sec: 360, money: 28000, rep: 52, heat: 60, req: { rep: 380 } },
+          { id: "armored", name: "Armored Convoy", sec: 420, money: 35000, rep: 64, heat: 72, req: { rep: 460 } },
+          { id: "cityhall", name: "City Hall Blackout", sec: 520, money: 46000, rep: 82, heat: 88, req: { rep: 560 } },
         ],
       },
     ];
@@ -632,6 +660,9 @@
       { id: "surveillance", name: "Surveillance & Counters", sec: 80, cost: 420, gains: { heatwise: 12, stealth: 10 }, desc: "Move like smoke. Less heat gained; better cleanups." },
       { id: "rhetoric", name: "Rhetoric & Influence", sec: 90, cost: 520, gains: { renown: 14, power: 8 }, desc: "A reputation is a weapon. Renown skyrockets." },
       { id: "chess", name: "Strategic Games", sec: 105, cost: 640, gains: { intelligence: 16, renown: 6 }, desc: "Cold math. Better prices and faster training." },
+      { id: "ballistics", name: "Ballistics Lab", sec: 110, cost: 780, gains: { strength: 14, power: 10 }, desc: "Grip, recoil, and discipline. Combat power increases." },
+      { id: "ledger", name: "Shadow Accounting", sec: 120, cost: 880, gains: { hustle: 12, intelligence: 12 }, desc: "Every dollar tagged, every leak sealed." },
+      { id: "undercover", name: "Undercover Craft", sec: 130, cost: 980, gains: { stealth: 14, heatwise: 12, renown: 6 }, desc: "Disappear in plain sight. Cooler, cleaner operations." },
     ];
     const HIDEOUT = [
       {
@@ -679,13 +710,44 @@
         costMult: 1.58,
         effect: (lvl) => ({ weaponPowerMult: 0.04 * lvl }),
       },
+      {
+        id: "casino",
+        name: "Shadow Casino",
+        icon: "M4 7h16M6 7v10a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V7M9 11h6M9 15h6",
+        desc: "A quiet house that never loses. Adds big passive income.",
+        baseCost: 2600,
+        costMult: 1.6,
+        effect: (lvl) => ({ passivePerMin: 36 * lvl }),
+      },
+      {
+        id: "signal",
+        name: "Signal Den",
+        icon: "M4 12h3l3 6 4-12 3 6h3",
+        desc: "Encrypted comms reduce lag and improve job speed.",
+        baseCost: 2400,
+        costMult: 1.56,
+        effect: (lvl) => ({ jobSpeed: 0.02 * lvl }),
+      },
+      {
+        id: "legal",
+        name: "Legal Shield",
+        icon: "M12 3l7 4v5c0 5-3.5 8.5-7 9-3.5-.5-7-4-7-9V7l7-4Z",
+        desc: "Retainers and fronts keep heat down longer.",
+        baseCost: 2800,
+        costMult: 1.57,
+        effect: (lvl) => ({ heatGainMult: -0.02 * lvl, heatReduceMult: 0.01 * lvl }),
+      },
     ];
     const CREW = [
       { id: "runner", name: "Runner 'Skylark'", tier: "Street", cost: 900, repReq: 18, upkeepPerMin: 3, bonus: { jobSpeed: 0.05 }, desc: "Fast hands. Cuts job duration slightly." },
       { id: "enforcer", name: "Enforcer 'Gavel'", tier: "Dockside", cost: 2200, repReq: 70, upkeepPerMin: 7, bonus: { combat: 22, repMult: 0.03 }, desc: "Breaks the room. Adds Combat Power and Rep gain." },
       { id: "fixer", name: "Fixer 'Velvet'", tier: "Nightlife", cost: 3100, repReq: 95, upkeepPerMin: 9, bonus: { heatReduceMult: 0.10, marketDiscount: 0.04 }, desc: "Bribes and bargains. Better cleanups and prices." },
+      { id: "driver", name: "Driver 'Slipstream'", tier: "Nightlife", cost: 3600, repReq: 110, upkeepPerMin: 10, bonus: { jobSpeed: 0.06, heatGainMult: -0.03 }, desc: "Getaways that erase the clock and footprints." },
       { id: "hacker", name: "Hacker 'Null'", tier: "White-Collar", cost: 5200, repReq: 165, upkeepPerMin: 14, bonus: { moneyMult: 0.06, trainingSpeed: 0.05 }, desc: "Makes money move. Boosts income and training speed." },
+      { id: "accountant", name: "Accountant 'Ledger'", tier: "White-Collar", cost: 6400, repReq: 190, upkeepPerMin: 15, bonus: { moneyMult: 0.05, marketDiscount: 0.05 }, desc: "Turns chaos into clean books with better margins." },
+      { id: "cleaner", name: "Cleaner 'Moth'", tier: "Syndicate", cost: 8200, repReq: 250, upkeepPerMin: 18, bonus: { heatGainMult: -0.06, heatReduceMult: 0.08 }, desc: "Erases traces fast and keeps crews quiet." },
       { id: "shadow", name: "Shadow 'Afterimage'", tier: "Black Ops", cost: 9800, repReq: 320, upkeepPerMin: 24, bonus: { jobSpeed: 0.08, heatGainMult: -0.07, combat: 35 }, desc: "Silent solutions. Faster jobs, less heat, more bite." },
+      { id: "captain", name: "Captain 'Anchor'", tier: "Black Ops", cost: 14000, repReq: 420, upkeepPerMin: 32, bonus: { repMult: 0.08, combat: 40 }, desc: "Keeps syndicate lines steady under fire." },
     ];
     const WEAPONS = [
       { id: "shiv", name: "Ceramic Shiv", type: "weapon", power: 8, cost: 450, repReq: 0, desc: "Undetectable and mean." },
@@ -703,6 +765,8 @@
       { id: "laylow", name: "Lay Low", sec: 45, cost: 120, reduce: 18, desc: "Wait it out. Cheap, slow, reliable." },
       { id: "bribe", name: "Grease Palms", sec: 60, cost: 520, reduce: 42, desc: "Pay the right people. Effective, pricey." },
       { id: "burn", name: "Burn Paper Trail", sec: 80, cost: 880, reduce: 70, desc: "Erase evidence. Big reduction. Slight rep hit chance." },
+      { id: "decoy", name: "Decoy Chase", sec: 70, cost: 620, reduce: 52, desc: "Send the heat in the wrong direction." },
+      { id: "ghost", name: "Ghost Protocol", sec: 95, cost: 1300, reduce: 100, desc: "Darken comms and vanish for a while." },
     ];
     // ---------- State ----------
     const STORAGE_KEY = "neon_underworld_v1";
@@ -821,6 +885,13 @@
       for (const b of getActiveBonuses()) {
         for (const [k,v] of Object.entries(b.effect || {})) mods[k] = (mods[k] || 0) + v;
       }
+      const levelMomentum = getLevelMomentum();
+      const repMomentum = getRepMomentum();
+      const heatPressure = getHeatPressure();
+      mods.moneyMult += levelMomentum + repMomentum - heatPressure * 0.15;
+      mods.repMult += levelMomentum * 0.6 + repMomentum * 0.4 - heatPressure * 0.1;
+      mods.heatGainMult += heatPressure * 0.06 - levelMomentum * 0.1;
+      mods.jobSpeed += Math.min(0.04, levelMomentum * 0.2);
       mods.marketDiscount = clamp(mods.marketDiscount, 0, 0.40);
       mods.trainingSpeed = clamp(mods.trainingSpeed, 0, 0.45);
       mods.jobSpeed = clamp(mods.jobSpeed, 0, 0.35);
@@ -850,6 +921,18 @@
       if (heat < 30) return { name: "Low", cls: "", dot: "dot" };
       if (heat < 70) return { name: "Hot", cls: "warnTxt", dot: "dot warn" };
       return { name: "Blazing", cls: "dangerTxt", dot: "dot bad" };
+    }
+    function getHeatPressure() {
+      return clamp((state.heat - 25) / 95, 0, 0.35);
+    }
+    function getLevelMomentum() {
+      return Math.max(0, (state.level - 1) * 0.01);
+    }
+    function getRepMomentum() {
+      return Math.max(0, Math.log10(state.rep + 10) * 0.015);
+    }
+    function getInfluence() {
+      return Math.max(0, Math.floor(state.rep * 1.05 + state.level * 18 - state.heat * 0.55));
     }
     // ---------- Offline progress ----------
     function applyOfflineProgress() {
@@ -937,6 +1020,7 @@
           state.money += payout;
           gainRep(repGain);
           gainHeat(heatGain);
+          addXp(Math.max(2, Math.floor(payout / 420)));
           if (state.heat >= 90 && Math.random() < 0.18) {
             const fine = Math.floor(payout * 0.22);
             state.money = Math.max(0, state.money - fine);
@@ -1028,6 +1112,7 @@
       level: () => state.level,
       xp: () => state.xp,
       xpNeed: () => levelXpNeed(state.level),
+      influence: () => getInfluence(),
       combatPower: () => getCombatPower(),
       crewSlots: () => getActiveCrewSlots(),
       activeCrew: () => state.crew.active.length,
@@ -1043,6 +1128,9 @@
       trainingSpeed: () => getCombinedMods().trainingSpeed || 0,
       jobSpeed: () => getCombinedMods().jobSpeed || 0,
       weaponPowerMult: () => getCombinedMods().weaponPowerMult || 0,
+      heatPressure: () => getHeatPressure(),
+      levelMomentum: () => getLevelMomentum(),
+      repMomentum: () => getRepMomentum(),
       heatTierName: () => heatTier(state.heat).name,
       heatClass: () => heatTier(state.heat).cls,
       heatDotClass: () => heatTier(state.heat).dot,
@@ -1095,7 +1183,11 @@
       if (netPerMin !== 0) state.money = Math.max(0, state.money + (netPerMin / 60) * dt);
       if (state.action && state.action.endsAt <= t) completeAction(state.action);
       if (!state.action && state.heat > 0) {
-        const decay = (state.heat < 30 ? 0.035 : 0.02) * dt;
+        const heatPressure = getHeatPressure();
+        const baseDecay = state.heat < 30 ? 0.04 : state.heat < 70 ? 0.026 : 0.018;
+        const decayBoost = 1 + (mods.heatReduceMult || 0) * 0.25 + getLevelMomentum() * 0.6;
+        const decayPenalty = 1 - heatPressure * 0.35;
+        const decay = baseDecay * decayBoost * decayPenalty * dt;
         state.heat = clamp(state.heat - decay, 0, 120);
       }
       renderHud();
@@ -1224,18 +1316,30 @@
         shakedown: "A quick 'tax' collection. Keep it moving.",
         snatch: "Fast hands, faster exits. No witnesses, ideally.",
         numbers: "A quiet network of slips and signals.",
+        pickpocket: "Light fingers, heavy pockets.",
+        stash: "A late-night resupply across the blocks.",
         crate: "A container falls off the records for a minute.",
         manifests: "Paperwork is a weapon if you know where to cut.",
         shipment: "A route changes. Nobody asks why.",
+        warehouse: "A quiet warehouse loses a few crates.",
         door: "Everyone pays. Some pay twice.",
         vip: "Information is currency in velvet rooms.",
         venue: "Security gets... persuaded into cooperation.",
+        residency: "House cut and backroom guarantees.",
         launder: "Make dirty look clean. Make clean look invisible.",
         insider: "Buy a whisper. Sell a fortune.",
         shells: "A maze of names hides the river of money.",
+        crypto: "Volatility with just enough leverage.",
+        supply: "Starve a rival by moving the route.",
+        payload: "Hold the line. Deliver the bag.",
+        arbitrage: "Short the market, long the muscle.",
         intercept: "Take the package. Leave the story.",
         blackmail: "Leverage is louder than truth.",
         vault: "One night. One chance. Everyone remembers.",
+        cleaner: "The scene never happened.",
+        skyline: "Glass and guards. We take both.",
+        armored: "Steel wheels. Soft nerves.",
+        cityhall: "The lights go out. The cash moves.",
       };
       return map[id] || "A job in the dark city.";
     }
@@ -1252,6 +1356,7 @@
                 <div class="chipRow">
                   <span class="chip">Combat Power: <span class="mono" data-bind="combatPower" data-format="int"></span></span>
                   <span class="chip">Crew Slots: <span class="mono" data-bind="crewSlots" data-format="int"></span></span>
+                  <span class="chip">Influence: <span class="mono" data-bind="influence" data-format="int"></span></span>
                   <span class="chip">Upkeep/min: <span class="mono" data-bind="upkeepPerMin" data-format="money"></span></span>
                 </div>
                 <div class="divider"></div>
@@ -1261,6 +1366,7 @@
                   <div>Heat Gain Mod: <span class="mono" data-bind="heatGainMult" data-format="signedPct"></span></div>
                   <div>Heat Control Bonus: <span class="mono">+<span data-bind="heatReduceMult" data-format="pct"></span></span></div>
                   <div>Passive Income/min: <span class="mono" data-bind="passivePerMin" data-format="money"></span></div>
+                  <div>Heat Pressure: <span class="mono" data-bind="heatPressure" data-format="pct"></span></div>
                 </div>
               </div>
               <div class="col6">
@@ -2013,6 +2119,9 @@
         <tr><td>Rep Bonus</td><td class="right mono" data-bind="repMult" data-format="pct"></td></tr>
         <tr><td>Heat Gain Mod</td><td class="right mono" data-bind="heatGainMult" data-format="signedPct"></td></tr>
         <tr><td>Heat Control Bonus</td><td class="right mono">+<span data-bind="heatReduceMult" data-format="pct"></span></td></tr>
+        <tr><td>Heat Pressure</td><td class="right mono" data-bind="heatPressure" data-format="pct"></td></tr>
+        <tr><td>Level Momentum</td><td class="right mono">+<span data-bind="levelMomentum" data-format="pct"></span></td></tr>
+        <tr><td>Rep Momentum</td><td class="right mono">+<span data-bind="repMomentum" data-format="pct"></span></td></tr>
         <tr><td>Passive Income/min</td><td class="right mono" data-bind="passivePerMin" data-format="money"></td></tr>
         <tr><td>Crew Upkeep/min</td><td class="right mono" data-bind="upkeepPerMin" data-format="money"></td></tr>
         <tr><td>Market Discount</td><td class="right mono" data-bind="marketDiscount" data-format="pct"></td></tr>
@@ -2028,6 +2137,7 @@
                 <tr><td>XP</td><td class="right mono"><span data-bind="xp" data-format="int"></span> / <span data-bind="xpNeed" data-format="int"></span></td></tr>
                 <tr><td>Money</td><td class="right mono" data-bind="money" data-format="money"></td></tr>
                 <tr><td>Rep</td><td class="right mono" data-bind="rep" data-format="int"></td></tr>
+                <tr><td>Influence</td><td class="right mono" data-bind="influence" data-format="int"></td></tr>
                 <tr><td>Heat</td><td class="right mono"><span data-bind="heat" data-format="float1"></span> (<span data-bind="heatTierName"></span>)</td></tr>
               </tbody>
             </table>

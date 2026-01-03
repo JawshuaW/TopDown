@@ -1,0 +1,2533 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Neon Underworld: Idle Empire</title>
+  <style>
+    :root{
+      --bg0:#070A12;
+      --bg1:#0B1020;
+      --bg2:#0E1630;
+      --card:rgba(255,255,255,.06);
+      --card2:rgba(255,255,255,.09);
+      --stroke:rgba(255,255,255,.10);
+      --stroke2:rgba(255,255,255,.16);
+      --txt:rgba(255,255,255,.92);
+      --muted:rgba(255,255,255,.62);
+      --muted2:rgba(255,255,255,.45);
+      --good:#48ffb5;
+      --warn:#ffd85a;
+      --bad:#ff5a7a;
+      --cyan:#48d6ff;
+      --violet:#b56bff;
+      --pink:#ff6be5;
+      --shadow: 0 20px 60px rgba(0,0,0,.45);
+      --radius:18px;
+      --radius2:26px;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      --sans: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      font-family:var(--sans);
+      background: radial-gradient(1200px 700px at 20% 10%, rgba(72,214,255,.18), transparent 60%),
+                  radial-gradient(900px 600px at 80% 15%, rgba(181,107,255,.16), transparent 55%),
+                  radial-gradient(900px 700px at 60% 90%, rgba(255,107,229,.10), transparent 55%),
+                  linear-gradient(180deg, var(--bg0), var(--bg1));
+      color:var(--txt);
+      overflow:hidden;
+    }
+    body::before{
+      content:"";
+      position:fixed;
+      inset:0;
+      background:
+        linear-gradient(transparent 90%, rgba(255,255,255,.02) 92%, transparent 94%),
+        radial-gradient(circle at 30% 25%, rgba(72,214,255,.08), transparent 42%),
+        radial-gradient(circle at 70% 70%, rgba(255,107,229,.06), transparent 45%);
+      mix-blend-mode:screen;
+      pointer-events:none;
+    }
+    body::after{
+      content:"";
+      position:fixed;
+      inset:0;
+      background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120' viewBox='0 0 120 120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='120' height='120' filter='url(%23n)' opacity='.12'/%3E%3C/svg%3E");
+      opacity:.12;
+      pointer-events:none;
+      mix-blend-mode:soft-light;
+    }
+    a{color:inherit}
+    button, input, select{font-family:inherit}
+    .app{
+      display:grid;
+      grid-template-columns: 280px 1fr;
+      height:100vh;
+      width:100vw;
+    }
+    .sidebar{
+      padding:18px 16px;
+      background: linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.02));
+      border-right:1px solid var(--stroke);
+      backdrop-filter: blur(10px);
+      position:relative;
+      overflow:hidden;
+    }
+    .sidebar::after{
+      content:"";
+      position:absolute;
+      inset:auto -40% -50% -40%;
+      height:240px;
+      background: radial-gradient(circle at 50% 20%, rgba(72,214,255,.18), transparent 60%);
+      pointer-events:none;
+    }
+    .brand{
+      display:flex;
+      gap:12px;
+      align-items:center;
+      padding:12px 12px 16px 12px;
+      border-radius: var(--radius);
+      background: linear-gradient(135deg, rgba(72,214,255,.10), rgba(181,107,255,.09));
+      border:1px solid var(--stroke);
+      box-shadow: var(--shadow);
+      margin-bottom:14px;
+    }
+    .logo{
+      width:46px;height:46px;border-radius:14px;
+      background:
+        radial-gradient(18px 18px at 30% 30%, rgba(72,214,255,.95), rgba(72,214,255,.0)),
+        radial-gradient(18px 18px at 70% 70%, rgba(181,107,255,.95), rgba(181,107,255,.0)),
+        linear-gradient(135deg, rgba(255,255,255,.12), rgba(255,255,255,.02));
+      border:1px solid var(--stroke2);
+      position:relative;
+      overflow:hidden;
+    }
+    .logo::after{
+      content:"";
+      position:absolute; inset:-30%;
+      background: conic-gradient(from 180deg, rgba(72,214,255,.0), rgba(72,214,255,.35), rgba(181,107,255,.0));
+      animation: spin 6.5s linear infinite;
+    }
+    @keyframes spin{to{transform:rotate(360deg)}}
+    .brand h1{
+      font-size:14px; line-height:1.1; margin:0;
+      letter-spacing:.7px;
+      text-transform:uppercase;
+    }
+    .brand .sub{
+      font-size:12px; color:var(--muted); margin-top:2px;
+    }
+    .nav{
+      display:flex; flex-direction:column; gap:8px;
+      margin-top:12px;
+    }
+    .nav button{
+      text-align:left;
+      border:1px solid transparent;
+      background: transparent;
+      color:var(--txt);
+      padding:12px 12px;
+      border-radius:14px;
+      cursor:pointer;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      transition: .18s ease;
+    }
+    .nav button:hover{
+      background: rgba(255,255,255,.06);
+      border-color: var(--stroke);
+      transform: translateY(-1px);
+    }
+    .nav button.active{
+      background: linear-gradient(135deg, rgba(72,214,255,.12), rgba(181,107,255,.12));
+      border-color: rgba(72,214,255,.35);
+    }
+    .nav .left{
+      display:flex; gap:10px; align-items:center;
+    }
+    .pill{
+      font-family:var(--mono);
+      font-size:11px;
+      color:rgba(255,255,255,.78);
+      background: rgba(255,255,255,.06);
+      border:1px solid var(--stroke);
+      padding:3px 8px;
+      border-radius:999px;
+    }
+    .meta{
+      position:absolute;
+      left:16px; right:16px; bottom:16px;
+      padding:12px;
+      border-radius: var(--radius);
+      border:1px solid var(--stroke);
+      background: rgba(0,0,0,.18);
+      box-shadow: 0 12px 40px rgba(0,0,0,.35);
+    }
+    .row{
+      display:flex; align-items:center; justify-content:space-between; gap:10px;
+      font-size:12px;
+      color:var(--muted);
+    }
+    .row strong{color:var(--txt); font-family:var(--mono); font-weight:600}
+    .content{
+      display:flex;
+      flex-direction:column;
+      height:100%;
+      overflow:hidden;
+    }
+    .topbar{
+      padding:16px 18px 12px 18px;
+      border-bottom:1px solid var(--stroke);
+      background: linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.01));
+      backdrop-filter: blur(10px);
+    }
+    .topgrid{
+      display:grid;
+      grid-template-columns: 1fr auto;
+      gap:12px;
+      align-items:center;
+    }
+    .headline{
+      display:flex;
+      align-items:flex-end;
+      justify-content:space-between;
+      gap:16px;
+    }
+    .headline h2{margin:0; font-size:18px; letter-spacing:.2px}
+    .headline .hint{color:var(--muted); font-size:12px}
+    .hud{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      justify-content:flex-end;
+    }
+    .hud .stat{
+      min-width: 132px;
+      padding:10px 12px;
+      border-radius: 14px;
+      border:1px solid var(--stroke);
+      background: rgba(0,0,0,.18);
+      box-shadow: 0 12px 30px rgba(0,0,0,.25);
+    }
+    .hud .k{font-size:11px; color:var(--muted); display:flex; justify-content:space-between; gap:8px}
+    .hud .v{font-family:var(--mono); font-size:13px; margin-top:6px; display:flex; gap:8px; align-items:center; justify-content:space-between}
+    .dot{width:8px;height:8px;border-radius:99px;background:var(--cyan); box-shadow: 0 0 18px rgba(72,214,255,.45)}
+    .dot.warn{background:var(--warn); box-shadow:0 0 18px rgba(255,216,90,.35)}
+    .dot.bad{background:var(--bad); box-shadow:0 0 18px rgba(255,90,122,.38)}
+    .main{
+      padding:18px;
+      overflow:auto;
+    }
+    .grid{
+      display:grid;
+      grid-template-columns: repeat(12, 1fr);
+      gap:14px;
+    }
+    .card{
+      grid-column: span 12;
+      border:1px solid var(--stroke);
+      background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
+      border-radius: var(--radius2);
+      padding:14px;
+      box-shadow: var(--shadow);
+      position:relative;
+      overflow:hidden;
+    }
+    .card::before{
+      content:"";
+      position:absolute;
+      inset:-40%;
+      background: radial-gradient(circle at 20% 30%, rgba(72,214,255,.09), transparent 55%),
+                  radial-gradient(circle at 80% 20%, rgba(181,107,255,.08), transparent 50%),
+                  radial-gradient(circle at 60% 80%, rgba(255,107,229,.06), transparent 55%);
+      pointer-events:none;
+    }
+    .card > *{position:relative}
+    .card h3{
+      margin:0 0 10px 0;
+      font-size:14px;
+      letter-spacing:.4px;
+      text-transform:uppercase;
+      color:rgba(255,255,255,.9);
+    }
+    .subnav{
+      display:flex; gap:10px; flex-wrap:wrap;
+      margin-top:10px;
+    }
+    .tab{
+      cursor:pointer;
+      border:1px solid var(--stroke);
+      background: rgba(0,0,0,.12);
+      color:var(--txt);
+      border-radius:999px;
+      padding:8px 12px;
+      font-size:12px;
+      transition:.18s ease;
+    }
+    .tab:hover{transform:translateY(-1px); border-color:var(--stroke2)}
+    .tab.active{
+      border-color: rgba(72,214,255,.28);
+      background: linear-gradient(135deg, rgba(72,214,255,.12), rgba(181,107,255,.10));
+    }
+    .items{
+      display:grid;
+      grid-template-columns: repeat(12, 1fr);
+      gap:12px;
+    }
+    .item{
+      grid-column: span 12;
+      border:1px solid var(--stroke);
+      background: rgba(0,0,0,.16);
+      border-radius: var(--radius);
+      padding:12px;
+      display:flex;
+      gap:12px;
+      align-items:flex-start;
+      justify-content:space-between;
+    }
+    .item .left{
+      display:flex; gap:12px; align-items:flex-start;
+      min-width:0;
+    }
+    .badge{
+      width:44px; height:44px; border-radius:14px;
+      background: linear-gradient(135deg, rgba(72,214,255,.14), rgba(181,107,255,.10));
+      border:1px solid rgba(255,255,255,.14);
+      box-shadow: 0 14px 30px rgba(0,0,0,.25);
+      display:flex; align-items:center; justify-content:center;
+      flex:0 0 auto;
+    }
+    .badge svg{opacity:.92}
+    .item h4{
+      margin:0;
+      font-size:14px;
+      letter-spacing:.2px;
+    }
+    .desc{
+      margin-top:6px;
+      color:var(--muted);
+      font-size:12px;
+      line-height:1.35;
+      max-width: 70ch;
+    }
+    .metaLine{
+      display:flex; gap:10px; flex-wrap:wrap; margin-top:10px;
+      font-family:var(--mono); font-size:11px; color:rgba(255,255,255,.75);
+    }
+    .metaLine span{
+      padding:3px 8px; border-radius:999px;
+      border:1px solid var(--stroke);
+      background: rgba(255,255,255,.05);
+    }
+    .actions{
+      display:flex; flex-direction:column; gap:8px;
+      align-items:flex-end;
+      flex:0 0 auto;
+    }
+    .btn{
+      cursor:pointer;
+      border-radius: 14px;
+      border:1px solid rgba(255,255,255,.14);
+      background: linear-gradient(135deg, rgba(72,214,255,.14), rgba(181,107,255,.12));
+      color:rgba(255,255,255,.92);
+      padding:9px 12px;
+      font-size:12px;
+      transition:.18s ease;
+      box-shadow: 0 14px 30px rgba(0,0,0,.25);
+      min-width: 140px;
+      text-align:center;
+    }
+    .btn:hover{transform: translateY(-1px); border-color: rgba(72,214,255,.30)}
+    .btn:disabled{
+      cursor:not-allowed;
+      opacity:.55;
+      transform:none;
+    }
+    .btn.secondary{
+      background: rgba(0,0,0,.14);
+      border-color: var(--stroke);
+      box-shadow:none;
+    }
+    .btn.danger{
+      background: linear-gradient(135deg, rgba(255,90,122,.22), rgba(255,107,229,.10));
+      border-color: rgba(255,90,122,.28);
+    }
+    .btn.good{
+      background: linear-gradient(135deg, rgba(72,255,181,.18), rgba(72,214,255,.10));
+      border-color: rgba(72,255,181,.28);
+    }
+    .progressWrap{
+      border:1px solid var(--stroke);
+      background: rgba(0,0,0,.18);
+      border-radius: 999px;
+      height: 12px;
+      overflow:hidden;
+      width: 100%;
+      position:relative;
+    }
+    .bar{
+      height:100%;
+      width:0%;
+      background: linear-gradient(90deg, rgba(72,214,255,.75), rgba(181,107,255,.75), rgba(255,107,229,.6));
+      box-shadow: 0 0 25px rgba(72,214,255,.30);
+      transition: width .08s linear;
+    }
+    .small{font-size:12px; color:var(--muted)}
+    .twoCol{
+      display:grid;
+      grid-template-columns: repeat(12, 1fr);
+      gap:12px;
+    }
+    .col6{grid-column: span 12}
+    .col4{grid-column: span 12}
+    .col8{grid-column: span 12}
+    @media (min-width: 980px){
+      .col6{grid-column: span 6}
+      .col4{grid-column: span 4}
+      .col8{grid-column: span 8}
+      .item{grid-column: span 6}
+      .card{padding:16px}
+    }
+    @media (min-width: 1260px){
+      .item{grid-column: span 4}
+    }
+    .table{
+      width:100%;
+      border-collapse:separate;
+      border-spacing: 0;
+      overflow:hidden;
+      border-radius: var(--radius);
+      border:1px solid var(--stroke);
+      background: rgba(0,0,0,.16);
+    }
+    .table th, .table td{
+      padding:10px 10px;
+      font-size:12px;
+      border-bottom:1px solid rgba(255,255,255,.06);
+      text-align:left;
+    }
+    .table th{color:var(--muted); font-weight:600}
+    .table tr:last-child td{border-bottom:none}
+    .mono{font-family:var(--mono)}
+    .right{text-align:right}
+    .muted{color:var(--muted)}
+    .toastHost{
+      position:fixed;
+      right:16px;
+      bottom:16px;
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+      z-index:50;
+      pointer-events:none;
+    }
+    .toast{
+      pointer-events:auto;
+      max-width: 360px;
+      border-radius: 16px;
+      border:1px solid var(--stroke);
+      background: rgba(0,0,0,.55);
+      backdrop-filter: blur(10px);
+      box-shadow: 0 20px 60px rgba(0,0,0,.45);
+      padding:12px 12px;
+      animation: pop .22s ease;
+    }
+    @keyframes pop{
+      from{transform: translateY(8px); opacity:0}
+      to{transform: translateY(0px); opacity:1}
+    }
+    .toast .t{font-size:12px; color:rgba(255,255,255,.9); margin:0}
+    .toast .b{font-size:12px; color:var(--muted); margin-top:6px; line-height:1.35}
+    .divider{
+      height:1px;
+      background: rgba(255,255,255,.08);
+      margin:12px 0;
+    }
+    .chipRow{display:flex; gap:8px; flex-wrap:wrap}
+    .chip{
+      font-size:11px;
+      color:rgba(255,255,255,.78);
+      border:1px solid var(--stroke);
+      background: rgba(255,255,255,.05);
+      padding:4px 8px;
+      border-radius:999px;
+      font-family:var(--mono);
+    }
+    .dangerTxt{color:rgba(255,90,122,.95)}
+    .goodTxt{color:rgba(72,255,181,.95)}
+    .warnTxt{color:rgba(255,216,90,.95)}
+    .kbd{
+      font-family:var(--mono);
+      font-size:11px;
+      border:1px solid var(--stroke);
+      background: rgba(255,255,255,.05);
+      border-bottom-color: rgba(255,255,255,.12);
+      padding:2px 6px;
+      border-radius:8px;
+      color:rgba(255,255,255,.8);
+      margin-left:6px;
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="logo" aria-hidden="true"></div>
+        <div>
+          <h1>Neon Underworld</h1>
+          <div class="sub">Idle Empire • single-player prototype</div>
+        </div>
+      </div>
+      <div class="nav" id="nav"></div>
+      <div class="meta">
+        <div class="row"><span>Save</span><strong id="saveState">—</strong></div>
+        <div class="row"><span>Action</span><strong id="actionState">Idle</strong></div>
+        <div class="row"><span>Status</span><strong id="jailState">Free</strong></div>
+        <div class="row"><span>Tip</span><strong id="tipLine">Keep heat low.</strong></div>
+      </div>
+    </aside>
+    <section class="content">
+      <div class="topbar">
+        <div class="topgrid">
+          <div class="headline">
+            <div>
+              <h2 id="pageTitle">Dashboard</h2>
+              <div class="hint" id="pageHint">Build a crew. Run jobs. Control the heat. Rule the city.</div>
+            </div>
+          </div>
+          <div class="hud" id="hud"></div>
+        </div>
+      </div>
+      <main class="main">
+        <div id="pageRoot"></div>
+      </main>
+    </section>
+  </div>
+  <div class="toastHost" id="toastHost"></div>
+  <script>
+    // ---------- Utilities ----------
+    const now = () => Date.now();
+    const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+    const fmt = new Intl.NumberFormat(undefined, { maximumFractionDigits: 0 });
+    const fmt1 = new Intl.NumberFormat(undefined, { maximumFractionDigits: 1 });
+    const money = (n) => "$" + fmt.format(Math.floor(n));
+    const pct = (n) => fmt1.format(n * 100) + "%";
+    const signedPct = (n) => `${n >= 0 ? "+" : ""}${pct(n)}`;
+    const secondsToHMS = (s) => {
+      s = Math.max(0, Math.floor(s));
+      const h = Math.floor(s / 3600);
+      const m = Math.floor((s % 3600) / 60);
+      const sec = s % 60;
+      if (h > 0) return `${h}h ${m}m ${sec}s`;
+      if (m > 0) return `${m}m ${sec}s`;
+      return `${sec}s`;
+    };
+    function toast(title, body, tone="info") {
+      const host = document.getElementById("toastHost");
+      const el = document.createElement("div");
+      el.className = "toast";
+      const tColor = tone === "good" ? "goodTxt" : tone === "warn" ? "warnTxt" : tone === "bad" ? "dangerTxt" : "";
+      el.innerHTML = `
+        <p class="t ${tColor}">${escapeHtml(title)}</p>
+        ${body ? `<div class="b">${escapeHtml(body)}</div>` : ""}
+      `;
+      host.appendChild(el);
+      setTimeout(() => {
+        el.style.opacity = "0";
+        el.style.transform = "translateY(8px)";
+        el.style.transition = "all .22s ease";
+      }, 3200);
+      setTimeout(() => el.remove(), 3600);
+    }
+    function escapeHtml(s) {
+      return String(s)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }
+    function icon(svgPathD) {
+      return `
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path d="${svgPathD}" stroke="rgba(255,255,255,.92)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      `;
+    }
+    // ---------- Content catalogs ----------
+    const SKILLS = [
+      { key: "strength", name: "Strength", desc: "Raw combat readiness. Raises Combat Power.", perLevel: (lvl) => ({ combat: 2 + lvl * 0.8 }) },
+      { key: "hustle", name: "Hustle", desc: "Street efficiency. Boosts job payouts.", perLevel: (lvl) => ({ moneyMult: 0.012 * lvl }) },
+      { key: "power", name: "Power", desc: "Presence & intimidation. Boosts Rep gain.", perLevel: (lvl) => ({ repMult: 0.010 * lvl }) },
+      { key: "heatwise", name: "Heatwise", desc: "Operational discipline. Reduces Heat gained.", perLevel: (lvl) => ({ heatGainMult: -0.009 * lvl }) },
+      { key: "stealth", name: "Stealth", desc: "Leaving no trail. Improves Heat Control actions.", perLevel: (lvl) => ({ heatReduceMult: 0.012 * lvl }) },
+      { key: "intelligence", name: "Intelligence", desc: "Planning & logistics. Discounts market & speeds training slightly.", perLevel: (lvl) => ({ marketDiscount: 0.006 * lvl, trainingSpeed: 0.004 * lvl }) },
+      { key: "renown", name: "Renown", desc: "Your legend. Boosts Rep gain & unlocks tiers.", perLevel: (lvl) => ({ repMult: 0.006 * lvl }) },
+    ];
+    const JOB_GROUPS = [
+      {
+        id: "street",
+        name: "Street Runs",
+        unlock: { rep: 0 },
+        desc: "Quick cash and fast heat. Low barrier, high risk.",
+        jobs: [
+          { id: "shakedown", name: "Corner Shakedown", sec: 12, money: 120, rep: 2, heat: 4, req: { rep: 0 } },
+          { id: "snatch", name: "Snatch & Grab", sec: 18, money: 210, rep: 3, heat: 6, req: { rep: 5 } },
+          { id: "numbers", name: "Back-Alley Numbers", sec: 24, money: 320, rep: 4, heat: 7, req: { rep: 10 } },
+          { id: "pickpocket", name: "Crowd Pickpocket", sec: 16, money: 180, rep: 3, heat: 6, req: { rep: 6 } },
+          { id: "stash", name: "Stash Run", sec: 28, money: 380, rep: 5, heat: 8, req: { rep: 12 } },
+        ],
+      },
+      {
+        id: "docks",
+        name: "Dockside Work",
+        unlock: { rep: 18 },
+        desc: "Smuggling routes, customs eyes, and dirty containers.",
+        jobs: [
+          { id: "crate", name: "Lift a Crate", sec: 30, money: 520, rep: 6, heat: 9, req: { rep: 18 } },
+          { id: "manifests", name: "Forge Manifests", sec: 45, money: 820, rep: 8, heat: 11, req: { rep: 28 } },
+          { id: "shipment", name: "Reroute Shipment", sec: 60, money: 1200, rep: 10, heat: 14, req: { rep: 40 } },
+          { id: "warehouse", name: "Warehouse Sweep", sec: 75, money: 1500, rep: 12, heat: 16, req: { rep: 55 } },
+        ],
+      },
+      {
+        id: "nightlife",
+        name: "Nightlife Takeovers",
+        unlock: { rep: 55 },
+        desc: "Clubs, security, VIP leverage. Good money, moderate heat.",
+        jobs: [
+          { id: "door", name: "Control the Door", sec: 50, money: 1350, rep: 10, heat: 12, req: { rep: 55 } },
+          { id: "vip", name: "VIP Favors", sec: 75, money: 1900, rep: 13, heat: 15, req: { rep: 70 } },
+          { id: "venue", name: "Venue Protection Deal", sec: 105, money: 2900, rep: 18, heat: 18, req: { rep: 95 } },
+          { id: "residency", name: "Residency Cut", sec: 120, money: 3600, rep: 22, heat: 20, req: { rep: 115 } },
+        ],
+      },
+      {
+        id: "white",
+        name: "White-Collar Schemes",
+        unlock: { rep: 120 },
+        desc: "Clean suits, dirty money. Bigger payouts; slower cycles.",
+        jobs: [
+          { id: "launder", name: "Launder a Slice", sec: 120, money: 4200, rep: 16, heat: 14, req: { rep: 120 } },
+          { id: "insider", name: "Insider Tip", sec: 160, money: 5900, rep: 20, heat: 16, req: { rep: 150 } },
+          { id: "shells", name: "Shell Company Maze", sec: 210, money: 8200, rep: 26, heat: 18, req: { rep: 195 } },
+          { id: "crypto", name: "Crypto Flip", sec: 140, money: 6900, rep: 22, heat: 16, req: { rep: 175 } },
+        ],
+      },
+      {
+        id: "syndicate",
+        name: "Syndicate Contracts",
+        unlock: { rep: 210 },
+        desc: "Regional contracts with steady payouts and serious scrutiny.",
+        jobs: [
+          { id: "supply", name: "Supply Line Cut", sec: 150, money: 8800, rep: 24, heat: 20, req: { rep: 210 } },
+          { id: "payload", name: "Payload Escort", sec: 200, money: 12800, rep: 30, heat: 24, req: { rep: 250 } },
+          { id: "arbitrage", name: "Hostile Arbitrage", sec: 230, money: 14600, rep: 34, heat: 26, req: { rep: 290 } },
+        ],
+      },
+      {
+        id: "blackops",
+        name: "Black Ops",
+        unlock: { rep: 260 },
+        desc: "Deep work. Deep consequences. Use Heat Control often.",
+        jobs: [
+          { id: "intercept", name: "Intercept Courier", sec: 170, money: 9800, rep: 26, heat: 26, req: { rep: 260 } },
+          { id: "blackmail", name: "Blackmail a Minister", sec: 240, money: 14600, rep: 34, heat: 34, req: { rep: 320 } },
+          { id: "vault", name: "Vault Night", sec: 330, money: 22000, rep: 44, heat: 48, req: { rep: 420 } },
+          { id: "cleaner", name: "Silent Cleanup", sec: 220, money: 15800, rep: 30, heat: 32, req: { rep: 300 } },
+        ],
+      },
+      {
+        id: "heists",
+        name: "High Heists",
+        unlock: { rep: 380 },
+        desc: "All-in moves. Huge payouts. Heat spikes hard.",
+        jobs: [
+          { id: "skyline", name: "Skyline Vault", sec: 360, money: 28000, rep: 52, heat: 60, req: { rep: 380 } },
+          { id: "armored", name: "Armored Convoy", sec: 420, money: 35000, rep: 64, heat: 72, req: { rep: 460 } },
+          { id: "cityhall", name: "City Hall Blackout", sec: 520, money: 46000, rep: 82, heat: 88, req: { rep: 560 } },
+        ],
+      },
+    ];
+    const TRAININGS = [
+      { id: "sparring", name: "Sparring Circuit", sec: 55, cost: 260, gains: { strength: 12, power: 6 }, desc: "Sharpen your edge. Builds Strength and Power." },
+      { id: "sidehustle", name: "Side Hustle Workshop", sec: 70, cost: 330, gains: { hustle: 14, intelligence: 6 }, desc: "Make every minute pay. Hustle rises; plans tighten." },
+      { id: "surveillance", name: "Surveillance & Counters", sec: 80, cost: 420, gains: { heatwise: 12, stealth: 10 }, desc: "Move like smoke. Less heat gained; better cleanups." },
+      { id: "rhetoric", name: "Rhetoric & Influence", sec: 90, cost: 520, gains: { renown: 14, power: 8 }, desc: "A reputation is a weapon. Renown skyrockets." },
+      { id: "chess", name: "Strategic Games", sec: 105, cost: 640, gains: { intelligence: 16, renown: 6 }, desc: "Cold math. Better prices and faster training." },
+      { id: "ballistics", name: "Ballistics Lab", sec: 110, cost: 780, gains: { strength: 14, power: 10 }, desc: "Grip, recoil, and discipline. Combat power increases." },
+      { id: "ledger", name: "Shadow Accounting", sec: 120, cost: 880, gains: { hustle: 12, intelligence: 12 }, desc: "Every dollar tagged, every leak sealed." },
+      { id: "undercover", name: "Undercover Craft", sec: 130, cost: 980, gains: { stealth: 14, heatwise: 12, renown: 6 }, desc: "Disappear in plain sight. Cooler, cleaner operations." },
+    ];
+    const HIDEOUT = [
+      {
+        id: "safehouse",
+        name: "Safehouse",
+        icon: "M3 10.5 12 3l9 7.5V21a1.5 1.5 0 0 1-1.5 1.5H4.5A1.5 1.5 0 0 1 3 21v-10.5Z",
+        desc: "Core base of operations. Increases job payouts.",
+        baseCost: 900,
+        costMult: 1.48,
+        effect: (lvl) => ({ moneyMult: 0.05 * lvl }),
+      },
+      {
+        id: "laundry",
+        name: "Front Business",
+        icon: "M7 8h10M7 12h10M7 16h10M5 4h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Z",
+        desc: "Legit cover. Adds passive income per minute.",
+        baseCost: 1100,
+        costMult: 1.54,
+        effect: (lvl) => ({ passivePerMin: 18 * lvl }),
+      },
+      {
+        id: "barracks",
+        name: "Crew Quarters",
+        icon: "M4 20v-8a2 2 0 0 1 2-2h1m10 10v-8a2 2 0 0 0-2-2h-1M7 10V7a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v3",
+        desc: "Bunks & lockers. Increases active bodyguard slots.",
+        baseCost: 1600,
+        costMult: 1.62,
+        effect: (lvl) => ({ crewSlots: lvl }),
+      },
+      {
+        id: "scrubbers",
+        name: "Evidence Scrubbers",
+        icon: "M9 17l6-6m-7 1 1-7 7-1-1 7-7 1Z",
+        desc: "Cleanup systems. Reduces heat gain from jobs.",
+        baseCost: 1800,
+        costMult: 1.55,
+        effect: (lvl) => ({ heatGainMult: -0.03 * lvl }),
+      },
+      {
+        id: "armory",
+        name: "Armory Rack",
+        icon: "M6 20V10m12 10V10M4 10h16M7 10V7a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v3",
+        desc: "Better gear. Increases combat power via equipment efficiency.",
+        baseCost: 2000,
+        costMult: 1.58,
+        effect: (lvl) => ({ weaponPowerMult: 0.04 * lvl }),
+      },
+      {
+        id: "casino",
+        name: "Shadow Casino",
+        icon: "M4 7h16M6 7v10a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V7M9 11h6M9 15h6",
+        desc: "A quiet house that never loses. Adds big passive income.",
+        baseCost: 2600,
+        costMult: 1.6,
+        effect: (lvl) => ({ passivePerMin: 36 * lvl }),
+      },
+      {
+        id: "signal",
+        name: "Signal Den",
+        icon: "M4 12h3l3 6 4-12 3 6h3",
+        desc: "Encrypted comms reduce lag and improve job speed.",
+        baseCost: 2400,
+        costMult: 1.56,
+        effect: (lvl) => ({ jobSpeed: 0.02 * lvl }),
+      },
+      {
+        id: "legal",
+        name: "Legal Shield",
+        icon: "M12 3l7 4v5c0 5-3.5 8.5-7 9-3.5-.5-7-4-7-9V7l7-4Z",
+        desc: "Retainers and fronts keep heat down longer.",
+        baseCost: 2800,
+        costMult: 1.57,
+        effect: (lvl) => ({ heatGainMult: -0.02 * lvl, heatReduceMult: 0.01 * lvl }),
+      },
+    ];
+    const CREW = [
+      { id: "runner", name: "Runner 'Skylark'", tier: "Street", cost: 900, repReq: 18, upkeepPerMin: 3, bonus: { jobSpeed: 0.05 }, desc: "Fast hands. Cuts job duration slightly." },
+      { id: "enforcer", name: "Enforcer 'Gavel'", tier: "Dockside", cost: 2200, repReq: 70, upkeepPerMin: 7, bonus: { combat: 22, repMult: 0.03 }, desc: "Breaks the room. Adds Combat Power and Rep gain." },
+      { id: "fixer", name: "Fixer 'Velvet'", tier: "Nightlife", cost: 3100, repReq: 95, upkeepPerMin: 9, bonus: { heatReduceMult: 0.10, marketDiscount: 0.04 }, desc: "Bribes and bargains. Better cleanups and prices." },
+      { id: "driver", name: "Driver 'Slipstream'", tier: "Nightlife", cost: 3600, repReq: 110, upkeepPerMin: 10, bonus: { jobSpeed: 0.06, heatGainMult: -0.03 }, desc: "Getaways that erase the clock and footprints." },
+      { id: "hacker", name: "Hacker 'Null'", tier: "White-Collar", cost: 5200, repReq: 165, upkeepPerMin: 14, bonus: { moneyMult: 0.06, trainingSpeed: 0.05 }, desc: "Makes money move. Boosts income and training speed." },
+      { id: "accountant", name: "Accountant 'Ledger'", tier: "White-Collar", cost: 6400, repReq: 190, upkeepPerMin: 15, bonus: { moneyMult: 0.05, marketDiscount: 0.05 }, desc: "Turns chaos into clean books with better margins." },
+      { id: "cleaner", name: "Cleaner 'Moth'", tier: "Syndicate", cost: 8200, repReq: 250, upkeepPerMin: 18, bonus: { heatGainMult: -0.06, heatReduceMult: 0.08 }, desc: "Erases traces fast and keeps crews quiet." },
+      { id: "shadow", name: "Shadow 'Afterimage'", tier: "Black Ops", cost: 9800, repReq: 320, upkeepPerMin: 24, bonus: { jobSpeed: 0.08, heatGainMult: -0.07, combat: 35 }, desc: "Silent solutions. Faster jobs, less heat, more bite." },
+      { id: "captain", name: "Captain 'Anchor'", tier: "Black Ops", cost: 14000, repReq: 420, upkeepPerMin: 32, bonus: { repMult: 0.08, combat: 40 }, desc: "Keeps syndicate lines steady under fire." },
+    ];
+    const WEAPONS = [
+      { id: "shiv", name: "Ceramic Shiv", type: "weapon", power: 8, cost: 450, repReq: 0, desc: "Undetectable and mean." },
+      { id: "baton", name: "Shock Baton", type: "weapon", power: 18, cost: 1200, repReq: 30, desc: "Non-lethal. Mostly." },
+      { id: "pistol", name: "Compact Pistol", type: "weapon", power: 35, cost: 3400, repReq: 95, desc: "A quiet argument-ender." },
+      { id: "rifle", name: "Carbine Kit", type: "weapon", power: 70, cost: 9800, repReq: 220, desc: "Heavy leverage in light packaging." },
+      { id: "drone", name: "Recon Drone", type: "weapon", power: 52, cost: 8200, repReq: 180, desc: "Eyes everywhere; heat everywhere." },
+    ];
+    const CONSUMABLES = [
+      { id: "booster_cash", name: "Hustle Serum", type: "consumable", cost: 1400, repReq: 40, durationSec: 10 * 60, effect: { moneyMult: 0.18 }, desc: "+18% Money from jobs for 10 min." },
+      { id: "booster_rep", name: "Renown Ink", type: "consumable", cost: 1600, repReq: 60, durationSec: 10 * 60, effect: { repMult: 0.16 }, desc: "+16% Rep from jobs for 10 min." },
+      { id: "booster_cool", name: "Cold Trail", type: "consumable", cost: 1900, repReq: 90, durationSec: 10 * 60, effect: { heatGainMult: -0.16 }, desc: "-16% Heat gained from jobs for 10 min." },
+    ];
+    const HEAT_ACTIONS = [
+      { id: "laylow", name: "Lay Low", sec: 45, cost: 120, reduce: 18, desc: "Wait it out. Cheap, slow, reliable." },
+      { id: "bribe", name: "Grease Palms", sec: 60, cost: 520, reduce: 42, desc: "Pay the right people. Effective, pricey." },
+      { id: "burn", name: "Burn Paper Trail", sec: 80, cost: 880, reduce: 70, desc: "Erase evidence. Big reduction. Slight rep hit chance." },
+      { id: "decoy", name: "Decoy Chase", sec: 70, cost: 620, reduce: 52, desc: "Send the heat in the wrong direction." },
+      { id: "ghost", name: "Ghost Protocol", sec: 95, cost: 1300, reduce: 100, desc: "Darken comms and vanish for a while." },
+    ];
+    const HEAT_MODULES = [
+      { id: "mist", name: "Mist Protocol", cost: 900, durationSec: 90, reducePerSec: 0.28, desc: "Low-and-slow scrubbers that cool heat over time." },
+      { id: "alibi", name: "Alibi Network", cost: 1600, durationSec: 120, reducePerSec: 0.38, desc: "A web of cover stories that quietly bleeds off heat." },
+      { id: "blackout", name: "Comms Blackout", cost: 2600, durationSec: 160, reducePerSec: 0.55, desc: "Shut down chatter to cool heat faster." },
+    ];
+    const HEAT_UPGRADES = [
+      {
+        id: "cooling",
+        name: "Cooling Efficiency",
+        maxLevel: 5,
+        baseCost: 800,
+        costMult: 1.45,
+        pointsCost: 1,
+        effect: (lvl) => ({ heatOvertimeMult: 0.12 * lvl }),
+        desc: "Improves all heat-over-time cooling rates.",
+      },
+      {
+        id: "duration",
+        name: "Buffer Tanks",
+        maxLevel: 4,
+        baseCost: 1000,
+        costMult: 1.55,
+        pointsCost: 1,
+        effect: (lvl) => ({ heatOvertimeDuration: 0.15 * lvl }),
+        desc: "Extends the duration of cooling modules.",
+      },
+      {
+        id: "impact",
+        name: "Rapid Extraction",
+        maxLevel: 3,
+        baseCost: 1400,
+        costMult: 1.6,
+        pointsCost: 2,
+        effect: (lvl) => ({ heatActionBonus: 0.06 * lvl }),
+        desc: "Heat actions remove more heat instantly.",
+      },
+    ];
+    // ---------- State ----------
+    const STORAGE_KEY = "neon_underworld_v1";
+    const DEFAULT_STATE = () => ({
+      v: 1,
+      createdAt: now(),
+      lastSeenAt: now(),
+      money: 600,
+      rep: 0,
+      heat: 0,
+      xp: 0,
+      level: 1,
+      skills: {
+        strength: { level: 1, xp: 0 },
+        hustle: { level: 1, xp: 0 },
+        power: { level: 1, xp: 0 },
+        heatwise: { level: 1, xp: 0 },
+        stealth: { level: 1, xp: 0 },
+        intelligence: { level: 1, xp: 0 },
+        renown: { level: 1, xp: 0 },
+      },
+      hideout: HIDEOUT.reduce((acc, u) => (acc[u.id] = { level: 0 }, acc), {}),
+      crew: { owned: [], active: [] },
+      inventory: { weapons: {}, consumables: {} },
+      equipped: { weaponId: null },
+      bonuses: [], // {id, name, endsAt, effect}
+      action: null, // {type, id, name, startedAt, endsAt}
+      heatModules: [],
+      heatUpgrades: HEAT_UPGRADES.reduce((acc, u) => (acc[u.id] = { level: 0 }, acc), {}),
+      heatPoints: 0,
+      jail: { endsAt: 0, strikes: 0 },
+      fineCooldownUntil: 0,
+      ui: { page: "dashboard", imperiumTab: "training" },
+    });
+    let state = loadState();
+    // ---------- Persistence ----------
+    function loadState() {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) return DEFAULT_STATE();
+      try {
+        const parsed = JSON.parse(raw);
+        const s = { ...DEFAULT_STATE(), ...parsed };
+        s.skills = { ...DEFAULT_STATE().skills, ...(parsed.skills || {}) };
+        s.hideout = { ...DEFAULT_STATE().hideout, ...(parsed.hideout || {}) };
+        s.crew = { ...DEFAULT_STATE().crew, ...(parsed.crew || {}) };
+        s.inventory = { ...DEFAULT_STATE().inventory, ...(parsed.inventory || {}) };
+        s.inventory.weapons = { ...(DEFAULT_STATE().inventory.weapons), ...((parsed.inventory||{}).weapons || {}) };
+        s.inventory.consumables = { ...(DEFAULT_STATE().inventory.consumables), ...((parsed.inventory||{}).consumables || {}) };
+        s.equipped = { ...DEFAULT_STATE().equipped, ...(parsed.equipped || {}) };
+        s.bonuses = Array.isArray(parsed.bonuses) ? parsed.bonuses : [];
+        s.heatModules = Array.isArray(parsed.heatModules) ? parsed.heatModules : [];
+        s.heatUpgrades = { ...DEFAULT_STATE().heatUpgrades, ...(parsed.heatUpgrades || {}) };
+        s.heatPoints = Number.isFinite(parsed.heatPoints) ? parsed.heatPoints : 0;
+        s.jail = { ...DEFAULT_STATE().jail, ...(parsed.jail || {}) };
+        s.fineCooldownUntil = parsed.fineCooldownUntil || 0;
+        s.ui = { ...DEFAULT_STATE().ui, ...(parsed.ui || {}) };
+        return s;
+      } catch {
+        return DEFAULT_STATE();
+      }
+    }
+    function saveState() {
+      state.lastSeenAt = now();
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      const el = document.getElementById("saveState");
+      if (el) el.textContent = "Saved";
+      setTimeout(() => {
+        const el2 = document.getElementById("saveState");
+        if (el2) el2.textContent = "Auto";
+      }, 800);
+    }
+    function hardReset() {
+      if (!confirm("Reset all progress? This cannot be undone.")) return;
+      state = DEFAULT_STATE();
+      saveState();
+      toast("Fresh start.", "Your empire is back to square one.", "warn");
+      renderAll();
+    }
+    // ---------- Derived / modifiers ----------
+    function getSkillLevel(key) { return state.skills[key]?.level ?? 1; }
+    function levelXpNeed(level) { return Math.floor(80 + (level - 1) * 45 + Math.pow(level, 1.38) * 12); }
+    function skillXpNeed(level) { return Math.floor(40 + (level - 1) * 28 + Math.pow(level, 1.35) * 8); }
+    function getHideoutLevel(id) { return state.hideout[id]?.level ?? 0; }
+    function hideoutCost(id) {
+      const u = HIDEOUT.find(x => x.id === id);
+      const lvl = getHideoutLevel(id);
+      return Math.floor(u.baseCost * Math.pow(u.costMult, lvl));
+    }
+    function getEquippedWeapon() {
+      const id = state.equipped.weaponId;
+      return id ? WEAPONS.find(w => w.id === id) : null;
+    }
+    function getActiveBonuses() {
+      const t = now();
+      return state.bonuses.filter(b => b.endsAt > t);
+    }
+    function pruneExpiredBonuses() {
+      const before = state.bonuses.length;
+      state.bonuses = getActiveBonuses();
+      if (state.bonuses.length !== before) saveState();
+    }
+    function getCombinedMods() {
+      const mods = {
+        moneyMult: 0, repMult: 0, heatGainMult: 0, heatReduceMult: 0,
+        marketDiscount: 0, trainingSpeed: 0, jobSpeed: 0, weaponPowerMult: 0,
+        passivePerMin: 0, crewSlots: 0, combat: 0,
+        heatOvertimeMult: 0, heatOvertimeDuration: 0, heatActionBonus: 0,
+      };
+      for (const s of SKILLS) {
+        const lvl = getSkillLevel(s.key);
+        const e = s.perLevel(lvl);
+        for (const [k,v] of Object.entries(e)) mods[k] = (mods[k] || 0) + v;
+      }
+      for (const u of HIDEOUT) {
+        const lvl = getHideoutLevel(u.id);
+        if (!lvl) continue;
+        const e = u.effect(lvl);
+        for (const [k,v] of Object.entries(e)) mods[k] = (mods[k] || 0) + v;
+      }
+      for (const id of state.crew.active) {
+        const c = CREW.find(x => x.id === id);
+        if (!c) continue;
+        for (const [k,v] of Object.entries(c.bonus)) mods[k] = (mods[k] || 0) + v;
+      }
+      const w = getEquippedWeapon();
+      if (w) mods.combat += w.power * (1 + (mods.weaponPowerMult || 0));
+      for (const b of getActiveBonuses()) {
+        for (const [k,v] of Object.entries(b.effect || {})) mods[k] = (mods[k] || 0) + v;
+      }
+      for (const u of HEAT_UPGRADES) {
+        const lvl = state.heatUpgrades?.[u.id]?.level || 0;
+        if (!lvl) continue;
+        const e = u.effect(lvl);
+        for (const [k,v] of Object.entries(e)) mods[k] = (mods[k] || 0) + v;
+      }
+      const levelMomentum = getLevelMomentum();
+      const repMomentum = getRepMomentum();
+      const heatPressure = getHeatPressure();
+      mods.moneyMult += levelMomentum + repMomentum - heatPressure * 0.15;
+      mods.repMult += levelMomentum * 0.6 + repMomentum * 0.4 - heatPressure * 0.1;
+      mods.heatGainMult += heatPressure * 0.06 - levelMomentum * 0.1;
+      mods.jobSpeed += Math.min(0.04, levelMomentum * 0.2);
+      mods.marketDiscount = clamp(mods.marketDiscount, 0, 0.40);
+      mods.trainingSpeed = clamp(mods.trainingSpeed, 0, 0.45);
+      mods.jobSpeed = clamp(mods.jobSpeed, 0, 0.35);
+      mods.heatGainMult = clamp(mods.heatGainMult, -0.60, 0.25);
+      mods.heatReduceMult = clamp(mods.heatReduceMult, 0, 0.80);
+      mods.heatOvertimeMult = clamp(mods.heatOvertimeMult, 0, 0.8);
+      mods.heatOvertimeDuration = clamp(mods.heatOvertimeDuration, 0, 1.0);
+      mods.heatActionBonus = clamp(mods.heatActionBonus, 0, 0.5);
+      return mods;
+    }
+    function getActiveCrewSlots() {
+      const base = 1;
+      const extra = getCombinedMods().crewSlots || 0;
+      return base + extra;
+    }
+    function upkeepPerMin() {
+      let u = 0;
+      for (const id of state.crew.active) {
+        const c = CREW.find(x => x.id === id);
+        if (c) u += c.upkeepPerMin;
+      }
+      return u;
+    }
+    function getCombatPower() {
+      const mods = getCombinedMods();
+      const base = 20 + getSkillLevel("strength") * 4 + getSkillLevel("power") * 2;
+      return Math.floor(base + (mods.combat || 0));
+    }
+    function heatTier(heat) {
+      if (heat < 30) return { name: "Low", cls: "", dot: "dot" };
+      if (heat < 70) return { name: "Hot", cls: "warnTxt", dot: "dot warn" };
+      return { name: "Blazing", cls: "dangerTxt", dot: "dot bad" };
+    }
+    function isJailed() {
+      return (state.jail?.endsAt || 0) > now();
+    }
+    function jailTimeLeft() {
+      return Math.max(0, ((state.jail?.endsAt || 0) - now()) / 1000);
+    }
+    function heatUpgradeCost(id) {
+      const u = HEAT_UPGRADES.find(x => x.id === id);
+      const lvl = state.heatUpgrades?.[id]?.level || 0;
+      if (!u) return 0;
+      return Math.floor(u.baseCost * Math.pow(u.costMult, lvl));
+    }
+    function addHeatPoints(amount) {
+      state.heatPoints = Math.max(0, state.heatPoints + amount);
+    }
+    function getHeatPressure() {
+      return clamp((state.heat - 25) / 95, 0, 0.35);
+    }
+    function getLevelMomentum() {
+      return Math.max(0, (state.level - 1) * 0.01);
+    }
+    function getRepMomentum() {
+      return Math.max(0, Math.log10(state.rep + 10) * 0.015);
+    }
+    function getInfluence() {
+      return Math.max(0, Math.floor(state.rep * 1.05 + state.level * 18 - state.heat * 0.55));
+    }
+    // ---------- Offline progress ----------
+    function applyOfflineProgress() {
+      const t = now();
+      const last = state.lastSeenAt || t;
+      const dtSec = Math.floor(Math.max(0, t - last) / 1000);
+      if (dtSec <= 2) return;
+      pruneExpiredBonuses();
+      if (state.jail?.endsAt && state.jail.endsAt <= t) {
+        state.jail.endsAt = 0;
+      }
+      const mods = getCombinedMods();
+      const passivePerMin = mods.passivePerMin || 0;
+      const netPerMin = passivePerMin - upkeepPerMin();
+      if (!isJailed() && netPerMin !== 0) {
+        const mins = dtSec / 60;
+        state.money = Math.max(0, state.money + netPerMin * mins);
+      }
+      if (state.action && state.action.endsAt <= t) {
+        completeAction(state.action, { offline: true });
+      }
+      toast("Welcome back.", `Offline gains applied (${secondsToHMS(dtSec)}).`, "good");
+    }
+    // ---------- Economy helpers ----------
+    function canAfford(cost) { return state.money >= cost; }
+    function addXp(amount) {
+      state.xp += amount;
+      while (state.xp >= levelXpNeed(state.level)) {
+        state.xp -= levelXpNeed(state.level);
+        state.level += 1;
+        toast("Level up!", `You reached Level ${state.level}.`, "good");
+      }
+    }
+    function addSkillXp(key, amount) {
+      const s = state.skills[key];
+      if (!s) return;
+      s.xp += amount;
+      while (s.xp >= skillXpNeed(s.level)) {
+        s.xp -= skillXpNeed(s.level);
+        s.level += 1;
+        toast("Skill improved.", `${SKILLS.find(x=>x.key===key)?.name || key} is now Lv ${s.level}.`, "good");
+      }
+    }
+    function pay(cost) { state.money = Math.max(0, state.money - cost); }
+    function gainRep(amount) { state.rep += amount; addXp(Math.floor(amount * 2.2)); }
+    function gainHeat(amount) { state.heat = clamp(state.heat + amount, 0, 120); }
+    function reduceHeat(amount) { state.heat = clamp(state.heat - amount, 0, 120); }
+    function marketPrice(base) {
+      const mods = getCombinedMods();
+      const disc = mods.marketDiscount || 0;
+      return Math.floor(base * (1 - disc));
+    }
+    // ---------- Actions ----------
+    function startAction(action) {
+      if (isJailed()) return toast("Locked up.", "Wait out your sentence.", "bad");
+      if (state.action) return toast("Busy.", "Finish the current action first.", "warn");
+      state.action = action;
+      const a = document.getElementById("actionState");
+      if (a) a.textContent = action.name;
+      toast("Action started.", action.name, "info");
+      saveState();
+      renderAll();
+    }
+    function cancelAction() {
+      if (!state.action) return;
+      toast("Action canceled.", state.action.name, "warn");
+      state.action = null;
+      const a = document.getElementById("actionState");
+      if (a) a.textContent = "Idle";
+      saveState();
+      renderAll();
+    }
+    function findJob(jobId) {
+      for (const g of JOB_GROUPS) {
+        const j = g.jobs.find(x => x.id === jobId);
+        if (j) return j;
+      }
+      return null;
+    }
+    function completeAction(action, { offline=false } = {}) {
+      if (!action) return;
+      if (action.type === "job") {
+        const job = findJob(action.id);
+        if (job) {
+          const mods = getCombinedMods();
+          const payout = Math.floor(job.money * (1 + (mods.moneyMult || 0)));
+          const repGain = Math.floor(job.rep * (1 + (mods.repMult || 0)));
+          const heatGain = Math.ceil(job.heat * (1 + (mods.heatGainMult || 0)));
+          state.money += payout;
+          gainRep(repGain);
+          gainHeat(heatGain);
+          addXp(Math.max(2, Math.floor(payout / 420)));
+          const via = offline ? " (offline)" : "";
+          toast("Job completed" + via, `+${money(payout)} • +${repGain} Rep • +${heatGain} Heat`, "good");
+          if (state.heat >= 100) {
+            toast("Heat critical.", "Pay the fine or face jail time.", "warn");
+          }
+          addSkillXp("hustle", Math.max(2, Math.floor(job.sec / 10)));
+          addSkillXp("renown", Math.max(1, Math.floor(repGain / 5)));
+        }
+      }
+      if (action.type === "training") {
+        const t = TRAININGS.find(x => x.id === action.id);
+        if (t) {
+          for (const [k,v] of Object.entries(t.gains)) addSkillXp(k, v);
+          addXp(18);
+          toast(offline ? "Training complete (offline)" : "Training complete", t.name, "good");
+        }
+      }
+      if (action.type === "heat") {
+        const a = HEAT_ACTIONS.find(x => x.id === action.id);
+        if (a) {
+          const mods = getCombinedMods();
+          let reduce = Math.floor(a.reduce * (1 + (mods.heatReduceMult || 0) + (mods.heatActionBonus || 0)));
+          reduceHeat(reduce);
+          if (a.id === "burn" && Math.random() < 0.22) {
+            const loss = 6;
+            state.rep = Math.max(0, state.rep - loss);
+            toast("Trail erased… loudly.", `Heat -${reduce}. Rep -${loss}.`, "warn");
+          } else {
+            toast(offline ? "Heat cooled (offline)" : "Heat cooled", `Heat -${reduce}.`, "good");
+          }
+          addHeatPoints(Math.max(1, Math.floor(reduce / 25)));
+          addSkillXp("heatwise", 10);
+          addSkillXp("stealth", 8);
+        }
+      }
+      state.action = null;
+      const as = document.getElementById("actionState");
+      if (as) as.textContent = "Idle";
+      saveState();
+      renderAll();
+    }
+    // ---------- Real-time UI updates ----------
+    function updateActionPanelLive() {
+      const titleEl = document.getElementById("actionTitle");
+      const typeEl = document.getElementById("actionType");
+      const timeEl = document.getElementById("actionTimeLeft");
+      const barEl = document.getElementById("actionProgressBar");
+      const wrapEl = document.getElementById("actionProgressWrap");
+      if (!titleEl || !typeEl || !timeEl || !barEl || !wrapEl) return;
+      if (!state.action) {
+        wrapEl.style.display = "none";
+        return;
+      }
+      wrapEl.style.display = "";
+      const t = now();
+      const total = Math.max(1, (state.action.endsAt - state.action.startedAt) / 1000);
+      const done = clamp((t - state.action.startedAt) / 1000, 0, total);
+      const left = Math.max(0, (state.action.endsAt - t) / 1000);
+      const pctDone = (done / total) * 100;
+      titleEl.textContent = state.action.name;
+      typeEl.textContent = state.action.type;
+      timeEl.textContent = secondsToHMS(left);
+      barEl.style.width = pctDone + "%";
+    }
+    function updateCountdownsLive() {
+      const nodes = document.querySelectorAll("[data-countdown-ends]");
+      const t = now();
+      nodes.forEach((el) => {
+        const endsAt = Number(el.getAttribute("data-countdown-ends"));
+        if (!Number.isFinite(endsAt)) return;
+        el.textContent = secondsToHMS((endsAt - t) / 1000);
+      });
+    }
+    function updateActionStripLive() {
+      const el = document.getElementById("tipLine");
+      if (!el || !state.action) return;
+      const t = now();
+      const left = Math.max(0, (state.action.endsAt - t) / 1000);
+      el.textContent = `${state.action.type.toUpperCase()} • ${secondsToHMS(left)} remaining`;
+    }
+    function updateJailStateLive() {
+      const js = document.getElementById("jailState");
+      if (!js) return;
+      js.textContent = isJailed() ? `Jailed (${secondsToHMS(jailTimeLeft())})` : "Free";
+    }
+    function handleHeatFines() {
+      const t = now();
+      if (state.heat < 100 || isJailed()) return;
+      if (t < (state.fineCooldownUntil || 0)) return;
+      const fine = Math.max(600, Math.floor(state.money * 0.12 + state.heat * 30));
+      if (state.money >= fine) {
+        pay(fine);
+        reduceHeat(22);
+        state.fineCooldownUntil = t + 45000;
+        toast("Heat crackdown.", `Paid ${money(fine)} to avoid jail.`, "warn");
+        return;
+      }
+      const strikes = (state.jail?.strikes || 0) + 1;
+      const sentence = 90 + strikes * 45;
+      state.jail = { endsAt: t + sentence * 1000, strikes };
+      state.fineCooldownUntil = t + 30000;
+      if (state.action) cancelAction();
+      toast("Jailed.", `Sentence ${secondsToHMS(sentence)} • Strike ${strikes}/3`, "bad");
+      if (strikes >= 3) {
+        toast("Game over.", "Three strikes. Your empire collapses.", "bad");
+        state = DEFAULT_STATE();
+      }
+      saveState();
+      renderAll();
+    }
+    // ---------- Lightweight data-binding ----------
+    const bindings = [];
+    const bindingGetters = {
+      money: () => state.money,
+      rep: () => state.rep,
+      heat: () => state.heat,
+      level: () => state.level,
+      xp: () => state.xp,
+      xpNeed: () => levelXpNeed(state.level),
+      influence: () => getInfluence(),
+      heatPoints: () => state.heatPoints || 0,
+      jailStrikes: () => state.jail?.strikes || 0,
+      jailTimeLeft: () => jailTimeLeft(),
+      combatPower: () => getCombatPower(),
+      crewSlots: () => getActiveCrewSlots(),
+      activeCrew: () => state.crew.active.length,
+      ownedCrew: () => state.crew.owned.length,
+      hideoutLevels: () => Object.values(state.hideout).reduce((a,x)=>a+(x.level||0),0),
+      upkeepPerMin: () => upkeepPerMin(),
+      passivePerMin: () => getCombinedMods().passivePerMin || 0,
+      moneyMult: () => getCombinedMods().moneyMult || 0,
+      repMult: () => getCombinedMods().repMult || 0,
+      heatGainMult: () => getCombinedMods().heatGainMult || 0,
+      heatReduceMult: () => getCombinedMods().heatReduceMult || 0,
+      marketDiscount: () => getCombinedMods().marketDiscount || 0,
+      trainingSpeed: () => getCombinedMods().trainingSpeed || 0,
+      jobSpeed: () => getCombinedMods().jobSpeed || 0,
+      weaponPowerMult: () => getCombinedMods().weaponPowerMult || 0,
+      heatPressure: () => getHeatPressure(),
+      levelMomentum: () => getLevelMomentum(),
+      repMomentum: () => getRepMomentum(),
+      heatOvertimeMult: () => getCombinedMods().heatOvertimeMult || 0,
+      heatOvertimeDuration: () => getCombinedMods().heatOvertimeDuration || 0,
+      heatActionBonus: () => getCombinedMods().heatActionBonus || 0,
+      heatTierName: () => heatTier(state.heat).name,
+      heatClass: () => heatTier(state.heat).cls,
+      heatDotClass: () => heatTier(state.heat).dot,
+    };
+    const bindingFormats = {
+      money: (v) => money(v),
+      int: (v) => fmt.format(v),
+      float1: (v) => fmt1.format(v),
+      pct: (v) => pct(v),
+      signedPct: (v) => signedPct(v),
+      raw: (v) => String(v),
+    };
+    function registerBindings(root = document) {
+      bindings.length = 0;
+      root.querySelectorAll("[data-bind]").forEach((el) => {
+        const key = el.dataset.bind;
+        const getter = bindingGetters[key];
+        if (!getter) return;
+        const formatKey = el.dataset.format || "raw";
+        const format = bindingFormats[formatKey] || bindingFormats.raw;
+        const classKey = el.dataset.classBind;
+        const classGetter = classKey ? bindingGetters[classKey] : null;
+        const baseClass = el.dataset.baseClass || el.className;
+        bindings.push({ el, getter, format, classGetter, baseClass });
+      });
+      applyBindings();
+    }
+    function applyBindings() {
+      for (const b of bindings) {
+        const value = b.getter();
+        const text = b.format(value);
+        if (b.el.textContent !== text) b.el.textContent = text;
+        if (b.classGetter) {
+          const extra = b.classGetter();
+          const next = `${b.baseClass} ${extra}`.trim();
+          if (b.el.className !== next) b.el.className = next;
+        }
+      }
+    }
+    // ---------- Game loop ----------
+    let lastTick = now();
+    function tick() {
+      const t = now();
+      const dt = Math.max(0.5, Math.min(2, (t - lastTick) / 1000));
+      lastTick = t;
+      pruneExpiredBonuses();
+      const mods = getCombinedMods();
+      const passivePerMin = mods.passivePerMin || 0;
+      const netPerMin = passivePerMin - upkeepPerMin();
+      if (!isJailed() && netPerMin !== 0) state.money = Math.max(0, state.money + (netPerMin / 60) * dt);
+      if (state.heatModules?.length) {
+        const overtimeMult = 1 + (mods.heatOvertimeMult || 0);
+        const t = now();
+        state.heatModules = state.heatModules.filter((m) => {
+          if (m.endsAt <= t) return false;
+          const rate = (m.reducePerSec || 0) * overtimeMult;
+          if (rate > 0) reduceHeat(rate * dt);
+          return true;
+        });
+      }
+      if (state.action && state.action.endsAt <= t) completeAction(state.action);
+      if (!state.action && state.heat > 0) {
+        const heatPressure = getHeatPressure();
+        const baseDecay = state.heat < 30 ? 0.04 : state.heat < 70 ? 0.026 : 0.018;
+        const decayBoost = 1 + (mods.heatReduceMult || 0) * 0.25 + getLevelMomentum() * 0.6;
+        const decayPenalty = 1 - heatPressure * 0.35;
+        const decay = baseDecay * decayBoost * decayPenalty * dt;
+        state.heat = clamp(state.heat - decay, 0, 120);
+      }
+      handleHeatFines();
+      renderHud();
+      renderActionStrip();
+      autosaveMaybe();
+    }
+    let autosaveAt = now();
+    function autosaveMaybe() {
+      const t = now();
+      if (t - autosaveAt >= 5000) {
+        autosaveAt = t;
+        saveState();
+      }
+    }
+    function uiLoop() {
+      updateActionPanelLive();
+      updateCountdownsLive();
+      updateActionStripLive();
+      updateJailStateLive();
+      applyBindings();
+      requestAnimationFrame(uiLoop);
+    }
+    // ---------- UI ----------
+    const PAGES = [
+      { id: "dashboard", name: "Dashboard", icon: "M3 12l9-9 9 9M5 10v10a2 2 0 0 0 2 2h3v-6h4v6h3a2 2 0 0 0 2-2V10" },
+      { id: "jobs", name: "Jobs", icon: "M7 7h10M7 12h10M7 17h10M4 7h.01M4 12h.01M4 17h.01" },
+      { id: "imperium", name: "Imperium", icon: "M12 3l8 5v13a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V8l8-5Z" },
+      { id: "stats", name: "Stats", icon: "M4 19V5M4 19h16M8 15l2-3 3 2 3-6" },
+    ];
+    const IMPERIUM_TABS = [
+      { id: "training", name: "Training" },
+      { id: "hideout", name: "Hideout" },
+      { id: "crew", name: "Crew" },
+      { id: "weapons", name: "Weapons" },
+      { id: "heat", name: "Heat Control" },
+      { id: "market", name: "Market" },
+    ];
+    function setPage(id) { state.ui.page = id; saveState(); renderAll(); }
+    function setImperiumTab(id) { state.ui.imperiumTab = id; saveState(); renderAll(); }
+    function renderNav() {
+      const nav = document.getElementById("nav");
+      nav.innerHTML = PAGES.map(p => `
+        <button class="${state.ui.page === p.id ? "active" : ""}" data-page="${p.id}">
+          <span class="left">${icon(p.icon)} <span>${escapeHtml(p.name)}</span></span>
+          <span class="pill">${p.id === "jobs" ? "Earn" : p.id === "imperium" ? "Build" : p.id === "stats" ? "View" : "HQ"}</span>
+        </button>
+      `).join("");
+      nav.querySelectorAll("button[data-page]").forEach(btn => btn.addEventListener("click", () => setPage(btn.dataset.page)));
+    }
+    function renderHud() {
+      const hud = document.getElementById("hud");
+      hud.innerHTML = `
+        <div class="stat">
+          <div class="k"><span>Money</span><span class="kbd">J</span></div>
+          <div class="v"><span class="mono" data-bind="money" data-format="money"></span><span class="dot"></span></div>
+        </div>
+        <div class="stat">
+          <div class="k"><span>Rep</span><span class="kbd">K</span></div>
+          <div class="v"><span class="mono" data-bind="rep" data-format="int"></span><span class="dot" style="background:var(--violet); box-shadow:0 0 18px rgba(181,107,255,.35)"></span></div>
+        </div>
+        <div class="stat">
+          <div class="k"><span>Heat</span><span class="kbd">L</span></div>
+          <div class="v"><span class="mono" data-bind="heat" data-format="float1" data-class-bind="heatClass" data-base-class="mono"></span><span class="dot" data-class-bind="heatDotClass" data-base-class="dot"></span></div>
+        </div>
+        <div class="stat">
+          <div class="k"><span>Level</span><span class="kbd">;</span></div>
+          <div class="v"><span class="mono" data-bind="level" data-format="int"></span><span class="dot" style="background:var(--pink); box-shadow:0 0 18px rgba(255,107,229,.35)"></span></div>
+        </div>
+      `;
+      registerBindings(hud);
+    }
+    function renderActionStrip() {
+      const el = document.getElementById("tipLine");
+      if (!el) return;
+      if (isJailed()) {
+        el.textContent = `In jail • ${secondsToHMS(jailTimeLeft())} remaining`;
+        return;
+      }
+      if (!state.action) {
+        const ht = heatTier(state.heat);
+        if (state.heat > 70) el.textContent = "Heat is blazing. Run Heat Control.";
+        else if (state.rep < 18) el.textContent = "Do Street Runs to unlock Dockside.";
+        else if (state.crew.active.length < getActiveCrewSlots() && state.rep >= 18) el.textContent = "Recruit a crew member for bonuses.";
+        else el.textContent = `Heat: ${ht.name}. Keep the city guessing.`;
+        return;
+      }
+      const t = now();
+      const left = Math.max(0, (state.action.endsAt - t) / 1000);
+      el.textContent = `${state.action.type.toUpperCase()} • ${secondsToHMS(left)} remaining`;
+    }
+    function renderPageHeader(title, hint) {
+      document.getElementById("pageTitle").textContent = title;
+      document.getElementById("pageHint").textContent = hint;
+    }
+    function renderActionPanelHTML() {
+      if (!state.action) {
+        return `<div class="small muted" id="actionProgressWrap">No active action. Start a Job, Training, or Heat Control operation.</div>`;
+      }
+      const t = now();
+      const total = Math.max(1, (state.action.endsAt - state.action.startedAt) / 1000);
+      const done = clamp((t - state.action.startedAt) / 1000, 0, total);
+      const left = Math.max(0, (state.action.endsAt - t) / 1000);
+      const pctDone = (done / total) * 100;
+      return `
+        <div class="item" style="grid-column:span 12" id="actionProgressWrap">
+          <div class="left">
+            <div class="badge">${icon("M12 8v4l3 3")}</div>
+            <div style="min-width:0">
+              <h4 id="actionTitle">${escapeHtml(state.action.name)}</h4>
+              <div class="desc">
+                Type: <span class="mono" id="actionType">${escapeHtml(state.action.type)}</span> •
+                Time left: <span class="mono" id="actionTimeLeft">${secondsToHMS(left)}</span>
+              </div>
+              <div style="margin-top:10px">
+                <div class="progressWrap"><div class="bar" id="actionProgressBar" style="width:${pctDone}%"></div></div>
+              </div>
+            </div>
+          </div>
+          <div class="actions">
+            <button class="btn danger" id="cancelAction">Cancel</button>
+          </div>
+        </div>
+      `;
+    }
+    function bindActionPanel(root) {
+      const btn = root.querySelector("#cancelAction");
+      if (btn) btn.onclick = () => cancelAction();
+    }
+    function jobFlavor(id) {
+      const map = {
+        shakedown: "A quick 'tax' collection. Keep it moving.",
+        snatch: "Fast hands, faster exits. No witnesses, ideally.",
+        numbers: "A quiet network of slips and signals.",
+        pickpocket: "Light fingers, heavy pockets.",
+        stash: "A late-night resupply across the blocks.",
+        crate: "A container falls off the records for a minute.",
+        manifests: "Paperwork is a weapon if you know where to cut.",
+        shipment: "A route changes. Nobody asks why.",
+        warehouse: "A quiet warehouse loses a few crates.",
+        door: "Everyone pays. Some pay twice.",
+        vip: "Information is currency in velvet rooms.",
+        venue: "Security gets... persuaded into cooperation.",
+        residency: "House cut and backroom guarantees.",
+        launder: "Make dirty look clean. Make clean look invisible.",
+        insider: "Buy a whisper. Sell a fortune.",
+        shells: "A maze of names hides the river of money.",
+        crypto: "Volatility with just enough leverage.",
+        supply: "Starve a rival by moving the route.",
+        payload: "Hold the line. Deliver the bag.",
+        arbitrage: "Short the market, long the muscle.",
+        intercept: "Take the package. Leave the story.",
+        blackmail: "Leverage is louder than truth.",
+        vault: "One night. One chance. Everyone remembers.",
+        cleaner: "The scene never happened.",
+        skyline: "Glass and guards. We take both.",
+        armored: "Steel wheels. Soft nerves.",
+        cityhall: "The lights go out. The cash moves.",
+      };
+      return map[id] || "A job in the dark city.";
+    }
+    function renderDashboard(root) {
+      renderPageHeader("Dashboard", "Your city. Your rules. Manage momentum and minimize heat spikes.");
+      const weapon = getEquippedWeapon();
+      const activeBonuses = getActiveBonuses();
+      root.innerHTML = `
+        <div class="grid">
+          <div class="card col8">
+            <h3>Empire Snapshot</h3>
+            <div class="twoCol">
+              <div class="col6">
+                <div class="chipRow">
+                  <span class="chip">Combat Power: <span class="mono" data-bind="combatPower" data-format="int"></span></span>
+                  <span class="chip">Crew Slots: <span class="mono" data-bind="crewSlots" data-format="int"></span></span>
+                  <span class="chip">Influence: <span class="mono" data-bind="influence" data-format="int"></span></span>
+                  <span class="chip">Upkeep/min: <span class="mono" data-bind="upkeepPerMin" data-format="money"></span></span>
+                </div>
+                <div class="divider"></div>
+                <div class="small">
+                  <div>Job Payout Bonus: <span class="mono" data-bind="moneyMult" data-format="pct"></span></div>
+                  <div>Rep Gain Bonus: <span class="mono" data-bind="repMult" data-format="pct"></span></div>
+                  <div>Heat Gain Mod: <span class="mono" data-bind="heatGainMult" data-format="signedPct"></span></div>
+                  <div>Heat Control Bonus: <span class="mono">+<span data-bind="heatReduceMult" data-format="pct"></span></span></div>
+                  <div>Passive Income/min: <span class="mono" data-bind="passivePerMin" data-format="money"></span></div>
+                  <div>Heat Pressure: <span class="mono" data-bind="heatPressure" data-format="pct"></span></div>
+                </div>
+              </div>
+              <div class="col6">
+                <div class="small">Equipped Weapon</div>
+                <div class="item" style="margin-top:10px">
+                  <div class="left">
+                    <div class="badge">${icon("M14 7l-9 9M8 8l8 8M16 4l4 4")}</div>
+                    <div>
+                      <h4>${weapon ? escapeHtml(weapon.name) : "None equipped"}</h4>
+                      <div class="desc">${weapon ? escapeHtml(weapon.desc) : "Buy a weapon in Market or equip one you own."}</div>
+                      ${weapon ? `<div class="metaLine"><span>Power +${fmt.format(weapon.power)}</span></div>` : ""}
+                    </div>
+                  </div>
+                  <div class="actions">
+                    <button class="btn secondary" id="goWeapons">Open Weapons</button>
+                  </div>
+                </div>
+                <div class="divider"></div>
+                <div class="small">Active Bonuses</div>
+                <div style="margin-top:10px">
+                  ${activeBonuses.length ? activeBonuses.map(b => `
+                    <div class="item" style="margin-bottom:10px">
+                      <div class="left">
+                        <div class="badge">${icon("M12 21s-8-4.5-8-11a5 5 0 0 1 9-3 5 5 0 0 1 9 3c0 6.5-8 11-8 11Z")}</div>
+                        <div>
+                          <h4>${escapeHtml(b.name)}</h4>
+                          <div class="desc">
+                            Expires in <span class="mono" data-countdown-ends="${b.endsAt}">${secondsToHMS((b.endsAt - now())/1000)}</span>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="actions">
+                        <button class="btn secondary" data-expire="${b.id}">Dismiss</button>
+                      </div>
+                    </div>
+                  `).join("") : `
+                    <div class="small muted">No active bonuses. Grab consumables in Market.</div>
+                  `}
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="card col4">
+            <h3>Quick Actions</h3>
+            <div class="items">
+              <div class="item" style="grid-column:span 12">
+                <div class="left">
+                  <div class="badge">${icon("M7 7h10M7 12h10M7 17h10M4 7h.01M4 12h.01M4 17h.01")}</div>
+                  <div>
+                    <h4>Run a job</h4>
+                    <div class="desc">Build cash and rep. Watch heat.</div>
+                  </div>
+                </div>
+                <div class="actions">
+                  <button class="btn" id="goJobs">Go to Jobs</button>
+                </div>
+              </div>
+              <div class="item" style="grid-column:span 12">
+                <div class="left">
+                  <div class="badge">${icon("M9 17l6-6m-7 1 1-7 7-1-1 7-7 1Z")}</div>
+                  <div>
+                    <h4>Cool the heat</h4>
+                    <div class="desc">Reduce heat to prevent backlash.</div>
+                  </div>
+                </div>
+                <div class="actions">
+                  <button class="btn danger" id="goHeat">Heat Control</button>
+                </div>
+              </div>
+              <div class="item" style="grid-column:span 12">
+                <div class="left">
+                  <div class="badge">${icon("M12 3l8 5v13a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V8l8-5Z")}</div>
+                  <div>
+                    <h4>Upgrade hideout</h4>
+                    <div class="desc">Increase passive income & multipliers.</div>
+                  </div>
+                </div>
+                <div class="actions">
+                  <button class="btn good" id="goHideout">Hideout</button>
+                </div>
+              </div>
+              <div class="item" style="grid-column:span 12">
+                <div class="left">
+                  <div class="badge">${icon("M4 19V5M4 19h16M8 15l2-3 3 2 3-6")}</div>
+                  <div>
+                    <h4>View full stats</h4>
+                    <div class="desc">Combat, economy, crew, bonuses.</div>
+                  </div>
+                </div>
+                <div class="actions">
+                  <button class="btn secondary" id="goStats">Stats</button>
+                </div>
+              </div>
+            </div>
+            <div class="divider"></div>
+            <button class="btn secondary" id="resetBtn">Reset Save</button>
+          </div>
+          <div class="card col12">
+            <h3>Current Action</h3>
+            ${renderActionPanelHTML()}
+          </div>
+        </div>
+      `;
+      root.querySelector("#goJobs").onclick = () => setPage("jobs");
+      root.querySelector("#goHeat").onclick = () => { setPage("imperium"); setImperiumTab("heat"); };
+      root.querySelector("#goHideout").onclick = () => { setPage("imperium"); setImperiumTab("hideout"); };
+      root.querySelector("#goWeapons").onclick = () => { setPage("imperium"); setImperiumTab("weapons"); };
+      root.querySelector("#goStats").onclick = () => setPage("stats");
+      root.querySelector("#resetBtn").onclick = () => hardReset();
+      root.querySelectorAll("button[data-expire]").forEach(btn => {
+        btn.onclick = () => {
+          state.bonuses = state.bonuses.filter(b => b.id !== btn.dataset.expire);
+          saveState();
+          renderAll();
+        };
+      });
+      bindActionPanel(root);
+    }
+    function renderJobItem(job, groupLocked, mods) {
+      const locked = groupLocked || state.rep < (job.req?.rep ?? 0) || isJailed();
+      const speed = 1 + (mods.jobSpeed || 0);
+      const sec = Math.max(6, Math.floor(job.sec / speed));
+      const payout = Math.floor(job.money * (1 + (mods.moneyMult || 0)));
+      const repGain = Math.floor(job.rep * (1 + (mods.repMult || 0)));
+      const heatGain = Math.ceil(job.heat * (1 + (mods.heatGainMult || 0)));
+      const dangerTag = heatGain >= 30 ? `<span class="dangerTxt">High Heat</span>` : heatGain >= 15 ? `<span class="warnTxt">Medium Heat</span>` : `<span class="goodTxt">Low Heat</span>`;
+      const isBusy = !!state.action || isJailed();
+      return `
+        <div class="item">
+          <div class="left">
+            <div class="badge">${icon("M12 2l3 7h7l-5.7 4.1L18.5 20 12 15.9 5.5 20l2.2-6.9L2 9h7l3-7Z")}</div>
+            <div style="min-width:0">
+              <h4>${escapeHtml(job.name)}</h4>
+              <div class="desc">${escapeHtml(jobFlavor(job.id))}</div>
+              <div class="metaLine">
+                <span>${sec}s</span>
+                <span>+${money(payout)}</span>
+                <span>+${repGain} Rep</span>
+                <span class="${heatGain >= 30 ? "dangerTxt" : heatGain >= 15 ? "warnTxt" : "goodTxt"}">+${heatGain} Heat</span>
+                <span>${dangerTag}</span>
+              </div>
+            </div>
+          </div>
+          <div class="actions">
+            <button class="btn ${heatGain >= 30 ? "danger" : ""}" data-job="${job.id}" ${locked || isBusy ? "disabled" : ""}>
+              ${isJailed() ? "Locked" : locked ? `Locked` : isBusy ? "Busy" : "Run Job"}
+            </button>
+          </div>
+        </div>
+      `;
+    }
+    function renderJobs(root) {
+      renderPageHeader("Jobs", "Pick a lane. Earn cash and rep. Heat rises with every move.");
+      const mods = getCombinedMods();
+      const groupsHtml = JOB_GROUPS.map(g => {
+        const locked = state.rep < (g.unlock?.rep ?? 0);
+        return `
+          <div class="card">
+            <h3>${escapeHtml(g.name)} ${locked ? `<span class="pill">Locked • ${fmt.format(g.unlock.rep)} Rep</span>` : ""}</h3>
+            <div class="small">${escapeHtml(g.desc)}</div>
+            <div class="divider"></div>
+            <div class="items">
+              ${g.jobs.map(j => renderJobItem(j, locked, mods)).join("")}
+            </div>
+          </div>
+        `;
+      }).join("");
+      root.innerHTML = `
+        <div class="grid">
+          <div class="card col12">
+            <h3>Action</h3>
+            ${renderActionPanelHTML()}
+          </div>
+          <div class="card col12">
+            <h3>Modifiers</h3>
+            <div class="chipRow">
+              <span class="chip">Money Bonus: <span class="mono" data-bind="moneyMult" data-format="pct"></span></span>
+              <span class="chip">Rep Bonus: <span class="mono" data-bind="repMult" data-format="pct"></span></span>
+              <span class="chip">Heat Gain Mod: <span class="mono" data-bind="heatGainMult" data-format="signedPct"></span></span>
+              <span class="chip">Job Speed Bonus: <span class="mono" data-bind="jobSpeed" data-format="pct"></span></span>
+            </div>
+          </div>
+          ${groupsHtml}
+        </div>
+      `;
+      bindActionPanel(root);
+      registerBindings(root);
+      root.querySelectorAll("button[data-job]").forEach(btn => {
+        btn.addEventListener("click", () => {
+          const jobId = btn.dataset.job;
+          const job = findJob(jobId);
+          if (!job) return;
+          if (isJailed()) return toast("Locked up.", "Wait out your sentence.", "bad");
+          if (state.action) return toast("Busy.", "Finish the current action first.", "warn");
+          if (state.rep < (job.req?.rep ?? 0)) return toast("Locked.", "Earn more Rep first.", "warn");
+          const mods = getCombinedMods();
+          const speed = 1 + (mods.jobSpeed || 0);
+          const sec = Math.max(6, Math.floor(job.sec / speed));
+          startAction({
+            type: "job",
+            id: job.id,
+            name: `Job: ${job.name}`,
+            startedAt: now(),
+            endsAt: now() + sec * 1000,
+          });
+        });
+      });
+    }
+    function skillName(key) { return SKILLS.find(x => x.key === key)?.name || key; }
+    function formatEffect(key, value) {
+      const map = {
+        moneyMult: (v) => `Money +${pct(v)}`,
+        repMult: (v) => `Rep +${pct(v)}`,
+        heatGainMult: (v) => `Heat ${v < 0 ? "" : "+"}${pct(v)}`,
+        heatReduceMult: (v) => `Heat Control +${pct(v)}`,
+        marketDiscount: (v) => `Market -${pct(v)}`,
+        trainingSpeed: (v) => `Training +${pct(v)}`,
+        jobSpeed: (v) => `Job Speed +${pct(v)}`,
+        weaponPowerMult: (v) => `Weapon Eff. +${pct(v)}`,
+        passivePerMin: (v) => `Passive ${money(v)}/min`,
+        crewSlots: (v) => `Crew Slots +${fmt.format(v)}`,
+        combat: (v) => `Combat +${fmt.format(v)}`,
+        heatOvertimeMult: (v) => `Cooling +${pct(v)}`,
+        heatOvertimeDuration: (v) => `Cooling Duration +${pct(v)}`,
+        heatActionBonus: (v) => `Heat Action +${pct(v)}`,
+      };
+      const fn = map[key];
+      return fn ? fn(value) : `${key} ${value}`;
+    }
+    function renderImperium(root) {
+      renderPageHeader("Imperium", "Upgrade the machine behind the empire.");
+      const tab = state.ui.imperiumTab;
+      root.innerHTML = `
+        <div class="grid">
+          <div class="card col12">
+            <h3>Imperium Controls</h3>
+            <div class="subnav" id="imperiumTabs">
+              ${IMPERIUM_TABS.map(t => `
+                <button class="tab ${tab === t.id ? "active" : ""}" data-tab="${t.id}">${escapeHtml(t.name)}</button>
+              `).join("")}
+            </div>
+            <div class="divider"></div>
+            <div id="imperiumBody"></div>
+          </div>
+          <div class="card col12">
+            <h3>Current Action</h3>
+            ${renderActionPanelHTML()}
+          </div>
+        </div>
+      `;
+      root.querySelectorAll("button[data-tab]").forEach(b => (b.onclick = () => setImperiumTab(b.dataset.tab)));
+      const body = root.querySelector("#imperiumBody");
+      if (tab === "training") renderTraining(body);
+      if (tab === "hideout") renderHideout(body);
+      if (tab === "crew") renderCrew(body);
+      if (tab === "weapons") renderWeapons(body);
+      if (tab === "heat") renderHeat(body);
+      if (tab === "market") renderMarket(body);
+      bindActionPanel(root);
+    }
+    function renderTraining(body) {
+      const mods = getCombinedMods();
+      const speed = 1 + (mods.trainingSpeed || 0);
+      body.innerHTML = `
+        <div class="small">Training builds permanent skill bonuses. Intelligence speeds training by <span class="mono" data-bind="trainingSpeed" data-format="pct"></span>.</div>
+        <div class="divider"></div>
+        <div class="items">
+          ${TRAININGS.map(t => {
+            const sec = Math.max(10, Math.floor(t.sec / speed));
+            const locked = state.action !== null || isJailed();
+            const affordable = canAfford(t.cost);
+            return `
+              <div class="item">
+                <div class="left">
+                  <div class="badge">${icon("M9 12l2 2 4-4M20 12a8 8 0 1 1-16 0 8 8 0 0 1 16 0Z")}</div>
+                  <div>
+                    <h4>${escapeHtml(t.name)}</h4>
+                    <div class="desc">${escapeHtml(t.desc)}</div>
+                    <div class="metaLine">
+                      <span>${sec}s</span>
+                      <span>Cost ${money(t.cost)}</span>
+                      ${Object.entries(t.gains).map(([k,v]) => `<span>+${v} ${escapeHtml(skillName(k))} XP</span>`).join("")}
+                    </div>
+                  </div>
+                </div>
+                <div class="actions">
+                  <button class="btn ${affordable ? "" : "secondary"}" data-train="${t.id}" ${locked || !affordable ? "disabled" : ""}>
+                    ${isJailed() ? "Locked" : locked ? "Busy" : affordable ? "Train" : "Need funds"}
+                  </button>
+                </div>
+              </div>
+            `;
+          }).join("")}
+        </div>
+      `;
+      registerBindings(body);
+      body.querySelectorAll("button[data-train]").forEach(btn => {
+        btn.onclick = () => {
+          const t = TRAININGS.find(x => x.id === btn.dataset.train);
+          if (!t) return;
+          if (isJailed()) return toast("Locked up.", "Wait out your sentence.", "bad");
+          if (state.action) return toast("Busy.", "Finish the current action first.", "warn");
+          if (!canAfford(t.cost)) return toast("Not enough money.", "Run more jobs.", "warn");
+          const mods = getCombinedMods();
+          const speed = 1 + (mods.trainingSpeed || 0);
+          const sec = Math.max(10, Math.floor(t.sec / speed));
+          pay(t.cost);
+          startAction({ type: "training", id: t.id, name: `Training: ${t.name}`, startedAt: now(), endsAt: now() + sec * 1000 });
+        };
+      });
+    }
+    function renderHideout(body) {
+      const mods = getCombinedMods();
+      body.innerHTML = `
+        <div class="small">Hideout upgrades scale your empire: payouts, passive income, slots, and heat control.</div>
+        <div class="divider"></div>
+        <div class="items">
+          ${HIDEOUT.map(u => {
+            const lvl = getHideoutLevel(u.id);
+            const cost = hideoutCost(u.id);
+            const locked = state.action !== null || isJailed();
+            const affordable = canAfford(cost);
+            const effect = u.effect(lvl + 1);
+            const effectLine = Object.entries(effect).map(([k,v]) => formatEffect(k, v)).join(" • ");
+            return `
+              <div class="item">
+                <div class="left">
+                  <div class="badge">${icon(u.icon)}</div>
+                  <div>
+                    <h4>${escapeHtml(u.name)} <span class="pill">Lv ${lvl}</span></h4>
+                    <div class="desc">${escapeHtml(u.desc)}</div>
+                    <div class="metaLine">
+                      <span>Upgrade: ${money(cost)}</span>
+                      <span>Next: ${escapeHtml(effectLine)}</span>
+                    </div>
+                  </div>
+                </div>
+                <div class="actions">
+                  <button class="btn good" data-up="${u.id}" ${locked || !affordable ? "disabled" : ""}>
+                    ${isJailed() ? "Locked" : locked ? "Busy" : affordable ? "Upgrade" : "Need funds"}
+                  </button>
+                </div>
+              </div>
+            `;
+          }).join("")}
+        </div>
+        <div class="divider"></div>
+        <div class="chipRow">
+          <span class="chip">Passive/min: <span class="mono" data-bind="passivePerMin" data-format="money"></span></span>
+          <span class="chip">Job payout: <span class="mono" data-bind="moneyMult" data-format="pct"></span></span>
+          <span class="chip">Heat mod: <span class="mono" data-bind="heatGainMult" data-format="signedPct"></span></span>
+          <span class="chip">Crew slots: <span class="mono" data-bind="crewSlots" data-format="int"></span></span>
+        </div>
+      `;
+      registerBindings(body);
+      body.querySelectorAll("button[data-up]").forEach(btn => {
+        btn.onclick = () => {
+          const id = btn.dataset.up;
+          const cost = hideoutCost(id);
+          if (isJailed()) return toast("Locked up.", "Wait out your sentence.", "bad");
+          if (state.action) return toast("Busy.", "Finish the current action first.", "warn");
+          if (!canAfford(cost)) return toast("Not enough money.", "Earn more cash.", "warn");
+          pay(cost);
+          state.hideout[id].level += 1;
+          toast("Upgrade complete.", `${HIDEOUT.find(x=>x.id===id)?.name} is now Lv ${state.hideout[id].level}.`, "good");
+          const slots = getActiveCrewSlots();
+          if (state.crew.active.length > slots) {
+            state.crew.active = state.crew.active.slice(0, slots);
+            toast("Crew adjusted.", "Active crew trimmed to slot cap.", "warn");
+          }
+          saveState();
+          renderAll();
+        };
+      });
+    }
+    function renderCrew(body) {
+      const slots = getActiveCrewSlots();
+      const owned = new Set(state.crew.owned);
+      const active = new Set(state.crew.active);
+      const lockedGlobal = isJailed();
+      body.innerHTML = `
+        <div class="small">
+          Recruit bodyguards for passive boosts. Active slots: <span class="mono" data-bind="crewSlots" data-format="int"></span>.
+          Upkeep applies per minute to active crew.
+        </div>
+        <div class="divider"></div>
+        <div class="twoCol">
+          <div class="col6">
+            <h3 style="margin-top:0">Roster</h3>
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th class="right">Upkeep/min</th>
+                  <th class="right">Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${state.crew.owned.length ? state.crew.owned.map(id => {
+                  const c = CREW.find(x => x.id === id);
+                  if (!c) return "";
+                  return `
+                    <tr>
+                      <td>${escapeHtml(c.name)}</td>
+                      <td class="right mono">${money(c.upkeepPerMin)}</td>
+                      <td class="right">${active.has(id) ? `<span class="goodTxt">Active</span>` : `<span class="muted">Idle</span>`}</td>
+                    </tr>
+                  `;
+                }).join("") : `
+                  <tr><td colspan="3" class="muted">No crew yet. Recruit below.</td></tr>
+                `}
+              </tbody>
+            </table>
+          </div>
+          <div class="col6">
+            <h3 style="margin-top:0">Manage Active Crew</h3>
+            <div class="small">Active bonuses apply only from active crew members.</div>
+            <div class="divider"></div>
+            <div class="items">
+              ${state.crew.owned.length ? state.crew.owned.map(id => {
+                const c = CREW.find(x => x.id === id);
+                if (!c) return "";
+                const isActive = active.has(id);
+                const canActivate = (isActive || state.crew.active.length < slots) && !lockedGlobal;
+                return `
+                  <div class="item" style="grid-column:span 12">
+                    <div class="left">
+                      <div class="badge">${icon("M16 11c1.7 0 3-1.3 3-3S17.7 5 16 5s-3 1.3-3 3 1.3 3 3 3ZM8 11c1.7 0 3-1.3 3-3S9.7 5 8 5 5 6.3 5 8s1.3 3 3 3ZM8 13c-2.3 0-7 1.2-7 3.5V19h10v-2.5C11 14.2 10.3 13 8 13Zm8 0c-2.3 0-3 .9-3 3.5V19h10v-2.5c0-2.3-4.7-3.5-7-3.5Z")}</div>
+                      <div>
+                        <h4>${escapeHtml(c.name)} <span class="pill">${escapeHtml(c.tier)}</span></h4>
+                        <div class="desc">${escapeHtml(c.desc)}</div>
+                        <div class="metaLine">
+                          <span>Upkeep/min ${money(c.upkeepPerMin)}</span>
+                          ${Object.entries(c.bonus).map(([k,v]) => `<span>${escapeHtml(formatEffect(k,v))}</span>`).join("")}
+                        </div>
+                      </div>
+                    </div>
+                    <div class="actions">
+                      <button class="btn ${isActive ? "secondary" : "good"}" data-toggle="${id}" ${canActivate ? "" : "disabled"}>
+                        ${lockedGlobal ? "Locked" : isActive ? "Deactivate" : "Activate"}
+                      </button>
+                    </div>
+                  </div>
+                `;
+              }).join("") : `<div class="small muted">Recruit crew first.</div>`}
+            </div>
+          </div>
+        </div>
+        <div class="divider"></div>
+        <h3>Recruitment</h3>
+        <div class="items">
+          ${CREW.map(c => {
+            const isOwned = owned.has(c.id);
+            const can = state.rep >= c.repReq && canAfford(c.cost);
+            const locked = state.action !== null || lockedGlobal;
+            return `
+              <div class="item">
+                <div class="left">
+                  <div class="badge">${icon("M12 21s-7-4.4-7-10a4 4 0 0 1 7-2 4 4 0 0 1 7 2c0 5.6-7 10-7 10Z")}</div>
+                  <div>
+                    <h4>${escapeHtml(c.name)} <span class="pill">${escapeHtml(c.tier)}</span></h4>
+                    <div class="desc">${escapeHtml(c.desc)}</div>
+                    <div class="metaLine">
+                      <span>Cost ${money(c.cost)}</span>
+                      <span>Rep ${fmt.format(c.repReq)}</span>
+                      <span>Upkeep/min ${money(c.upkeepPerMin)}</span>
+                      ${Object.entries(c.bonus).map(([k,v]) => `<span>${escapeHtml(formatEffect(k,v))}</span>`).join("")}
+                    </div>
+                  </div>
+                </div>
+                <div class="actions">
+                  <button class="btn" data-recruit="${c.id}" ${locked || isOwned || !can ? "disabled" : ""}>
+                    ${lockedGlobal ? "Locked" : isOwned ? "Owned" : locked ? "Busy" : can ? "Recruit" : "Locked"}
+                  </button>
+                </div>
+              </div>
+            `;
+          }).join("")}
+        </div>
+      `;
+      registerBindings(body);
+      body.querySelectorAll("button[data-recruit]").forEach(btn => {
+        btn.onclick = () => {
+          const id = btn.dataset.recruit;
+          const c = CREW.find(x => x.id === id);
+          if (!c) return;
+          if (isJailed()) return toast("Locked up.", "Wait out your sentence.", "bad");
+          if (state.action) return toast("Busy.", "Finish the current action first.", "warn");
+          if (state.crew.owned.includes(id)) return toast("Already owned.", "", "warn");
+          if (state.rep < c.repReq) return toast("Rep too low.", "Run higher-tier jobs.", "warn");
+          if (!canAfford(c.cost)) return toast("Not enough money.", "Earn more cash.", "warn");
+          pay(c.cost);
+          state.crew.owned.push(id);
+          const slots = getActiveCrewSlots();
+          if (state.crew.active.length < slots) state.crew.active.push(id);
+          toast("Recruited.", c.name, "good");
+          saveState();
+          renderAll();
+        };
+      });
+      body.querySelectorAll("button[data-toggle]").forEach(btn => {
+        btn.onclick = () => {
+          const id = btn.dataset.toggle;
+          const idx = state.crew.active.indexOf(id);
+          const slots = getActiveCrewSlots();
+          if (isJailed()) return toast("Locked up.", "Wait out your sentence.", "bad");
+          if (idx >= 0) {
+            state.crew.active.splice(idx, 1);
+            toast("Crew deactivated.", "", "info");
+          } else {
+            if (state.crew.active.length >= slots) return toast("No slots.", "Upgrade Crew Quarters to add slots.", "warn");
+            state.crew.active.push(id);
+            toast("Crew activated.", "", "good");
+          }
+          saveState();
+          renderAll();
+        };
+      });
+    }
+    function renderWeapons(body) {
+      const ownedWeapons = Object.entries(state.inventory.weapons)
+        .filter(([,qty]) => qty > 0)
+        .map(([id,qty]) => ({ w: WEAPONS.find(x=>x.id===id), qty }))
+        .filter(x => x.w);
+      const eq = state.equipped.weaponId;
+      const lockedGlobal = isJailed();
+      body.innerHTML = `
+        <div class="small">Weapons raise Combat Power. Some items also synergize with Armory Rack upgrades.</div>
+        <div class="divider"></div>
+        <div class="chipRow">
+          <span class="chip">Combat Power: <span class="mono" data-bind="combatPower" data-format="int"></span></span>
+          <span class="chip">Equipped: ${eq ? escapeHtml(WEAPONS.find(w=>w.id===eq)?.name || "—") : "None"}</span>
+        </div>
+        <div class="divider"></div>
+        <h3>Owned Weapons</h3>
+        <div class="items">
+          ${ownedWeapons.length ? ownedWeapons.map(({w, qty}) => `
+            <div class="item">
+              <div class="left">
+                <div class="badge">${icon("M14 7l-9 9M8 8l8 8M16 4l4 4")}</div>
+                <div>
+                  <h4>${escapeHtml(w.name)} ${eq === w.id ? `<span class="pill">Equipped</span>` : ""}</h4>
+                  <div class="desc">${escapeHtml(w.desc)}</div>
+                  <div class="metaLine">
+                    <span>Power +${fmt.format(w.power)}</span>
+                    <span>Qty ${fmt.format(qty)}</span>
+                  </div>
+                </div>
+              </div>
+              <div class="actions">
+                <button class="btn ${eq === w.id ? "secondary" : ""}" data-equip="${w.id}" ${lockedGlobal ? "disabled" : ""}>${lockedGlobal ? "Locked" : eq === w.id ? "Unequip" : "Equip"}</button>
+              </div>
+            </div>
+          `).join("") : `<div class="small muted">No weapons owned. Visit Market to buy.</div>`}
+        </div>
+        <div class="divider"></div>
+        <button class="btn secondary" id="toMarket">Go to Market</button>
+      `;
+      registerBindings(body);
+      body.querySelector("#toMarket").onclick = () => setImperiumTab("market");
+      body.querySelectorAll("button[data-equip]").forEach(btn => {
+        btn.onclick = () => {
+          if (isJailed()) return toast("Locked up.", "Wait out your sentence.", "bad");
+          const id = btn.dataset.equip;
+          state.equipped.weaponId = (state.equipped.weaponId === id) ? null : id;
+          saveState();
+          renderAll();
+        };
+      });
+    }
+    function renderHeat(body) {
+      const mods = getCombinedMods();
+      const lockedGlobal = isJailed();
+      body.innerHTML = `
+        <div class="small">Heat Control reduces your Heat. Stealth improves effectiveness by <span class="mono" data-bind="heatReduceMult" data-format="pct"></span>.</div>
+        <div class="divider"></div>
+        <div class="chipRow">
+          <span class="chip">Heat: <span class="mono" data-bind="heat" data-format="float1" data-class-bind="heatClass" data-base-class="mono"></span></span>
+          <span class="chip">Heat Tier: <span class="mono" data-bind="heatTierName"></span></span>
+          <span class="chip">Heat Points: <span class="mono" data-bind="heatPoints" data-format="int"></span></span>
+        </div>
+        <div class="divider"></div>
+        <div class="items">
+          ${HEAT_ACTIONS.map(a => {
+            const locked = !!state.action || lockedGlobal;
+            const ok = canAfford(a.cost);
+            const projected = Math.floor(a.reduce * (1 + (mods.heatReduceMult || 0) + (mods.heatActionBonus || 0)));
+            return `
+              <div class="item">
+                <div class="left">
+                  <div class="badge">${icon("M3 12h18M12 3v18")}</div>
+                  <div>
+                    <h4>${escapeHtml(a.name)}</h4>
+                    <div class="desc">${escapeHtml(a.desc)}</div>
+                    <div class="metaLine">
+                      <span>${a.sec}s</span>
+                      <span>Cost ${money(a.cost)}</span>
+                      <span class="goodTxt">Heat -${fmt.format(projected)}</span>
+                    </div>
+                  </div>
+                </div>
+                <div class="actions">
+                  <button class="btn danger" data-heat="${a.id}" ${locked || !ok ? "disabled" : ""}>
+                    ${lockedGlobal ? "Locked" : locked ? "Busy" : ok ? "Run" : "Need funds"}
+                  </button>
+                </div>
+              </div>
+            `;
+          }).join("")}
+        </div>
+        <div class="divider"></div>
+        <h3>Heat Control Store</h3>
+        <div class="items">
+          ${HEAT_MODULES.map(m => {
+            const duration = Math.floor(m.durationSec * (1 + (mods.heatOvertimeDuration || 0)));
+            const rate = m.reducePerSec * (1 + (mods.heatOvertimeMult || 0));
+            const ok = canAfford(m.cost);
+            return `
+              <div class="item">
+                <div class="left">
+                  <div class="badge">${icon("M12 5v14M5 12h14")}</div>
+                  <div>
+                    <h4>${escapeHtml(m.name)}</h4>
+                    <div class="desc">${escapeHtml(m.desc)}</div>
+                    <div class="metaLine">
+                      <span>Cost ${money(m.cost)}</span>
+                      <span>Duration ${secondsToHMS(duration)}</span>
+                      <span class="goodTxt">-${fmt1.format(rate)}/sec</span>
+                    </div>
+                  </div>
+                </div>
+                <div class="actions">
+                  <button class="btn good" data-module="${m.id}" ${lockedGlobal || !ok ? "disabled" : ""}>
+                    ${lockedGlobal ? "Locked" : ok ? "Activate" : "Need funds"}
+                  </button>
+                </div>
+              </div>
+            `;
+          }).join("")}
+        </div>
+        <div class="divider"></div>
+        <h3>Active Cooling</h3>
+        <div class="items">
+          ${state.heatModules?.length ? state.heatModules.map(m => `
+            <div class="item">
+              <div class="left">
+                <div class="badge">${icon("M12 4v16M4 12h16")}</div>
+                <div>
+                  <h4>${escapeHtml(m.name)}</h4>
+                  <div class="desc">Cooling over time.</div>
+                  <div class="metaLine">
+                    <span>Ends in <span class="mono" data-countdown-ends="${m.endsAt}">${secondsToHMS((m.endsAt - now())/1000)}</span></span>
+                  </div>
+                </div>
+              </div>
+              <div class="actions">
+                <button class="btn secondary" data-cancel-module="${m.id}">Dismiss</button>
+              </div>
+            </div>
+          `).join("") : `<div class="small muted">No active cooling modules.</div>`}
+        </div>
+        <div class="divider"></div>
+        <h3>Heat Control Skills</h3>
+        <div class="items">
+          ${HEAT_UPGRADES.map(u => {
+            const lvl = state.heatUpgrades?.[u.id]?.level || 0;
+            const cost = heatUpgradeCost(u.id);
+            const canLevel = lvl < u.maxLevel;
+            const canAffordUpgrade = canAfford(cost) && state.heatPoints >= u.pointsCost;
+            const next = u.effect(lvl + 1);
+            const effectLine = Object.entries(next).map(([k,v]) => formatEffect(k, v)).join(" • ");
+            return `
+              <div class="item">
+                <div class="left">
+                  <div class="badge">${icon("M12 3l7 4v5c0 5-3.5 8.5-7 9-3.5-.5-7-4-7-9V7l7-4Z")}</div>
+                  <div>
+                    <h4>${escapeHtml(u.name)} <span class="pill">Lv ${lvl}/${u.maxLevel}</span></h4>
+                    <div class="desc">${escapeHtml(u.desc)}</div>
+                    <div class="metaLine">
+                      <span>Cost ${money(cost)}</span>
+                      <span>Heat Points ${u.pointsCost}</span>
+                      <span>Next: ${escapeHtml(effectLine)}</span>
+                    </div>
+                  </div>
+                </div>
+                <div class="actions">
+                  <button class="btn" data-heat-up="${u.id}" ${lockedGlobal || !canLevel || !canAffordUpgrade ? "disabled" : ""}>
+                    ${lockedGlobal ? "Locked" : !canLevel ? "Maxed" : canAffordUpgrade ? "Upgrade" : "Need points"}
+                  </button>
+                </div>
+              </div>
+            `;
+          }).join("")}
+        </div>
+      `;
+      registerBindings(body);
+      body.querySelectorAll("button[data-heat]").forEach(btn => {
+        btn.onclick = () => {
+          const a = HEAT_ACTIONS.find(x => x.id === btn.dataset.heat);
+          if (!a) return;
+          if (isJailed()) return toast("Locked up.", "Wait out your sentence.", "bad");
+          if (state.action) return toast("Busy.", "Finish the current action first.", "warn");
+          if (!canAfford(a.cost)) return toast("Not enough money.", "Earn more cash.", "warn");
+          pay(a.cost);
+          startAction({ type: "heat", id: a.id, name: `Heat Control: ${a.name}`, startedAt: now(), endsAt: now() + a.sec * 1000 });
+        };
+      });
+      body.querySelectorAll("button[data-module]").forEach(btn => {
+        btn.onclick = () => {
+          const m = HEAT_MODULES.find(x => x.id === btn.dataset.module);
+          if (!m) return;
+          if (isJailed()) return toast("Locked up.", "Wait out your sentence.", "bad");
+          if (!canAfford(m.cost)) return toast("Not enough money.", "Earn more cash.", "warn");
+          pay(m.cost);
+          const mods = getCombinedMods();
+          const duration = Math.floor(m.durationSec * (1 + (mods.heatOvertimeDuration || 0)));
+          state.heatModules.push({
+            id: `${m.id}_${Math.floor(Math.random() * 1e8)}`,
+            name: m.name,
+            endsAt: now() + duration * 1000,
+            reducePerSec: m.reducePerSec,
+          });
+          toast("Cooling active.", `${m.name} engaged.`, "good");
+          saveState();
+          renderAll();
+        };
+      });
+      body.querySelectorAll("button[data-heat-up]").forEach(btn => {
+        btn.onclick = () => {
+          const id = btn.dataset.heatUp;
+          const u = HEAT_UPGRADES.find(x => x.id === id);
+          if (!u) return;
+          if (isJailed()) return toast("Locked up.", "Wait out your sentence.", "bad");
+          const lvl = state.heatUpgrades?.[id]?.level || 0;
+          if (lvl >= u.maxLevel) return toast("Maxed out.", "", "warn");
+          const cost = heatUpgradeCost(id);
+          if (!canAfford(cost) || state.heatPoints < u.pointsCost) return toast("Need resources.", "Earn money and heat points.", "warn");
+          pay(cost);
+          state.heatPoints -= u.pointsCost;
+          state.heatUpgrades[id].level += 1;
+          toast("Heat skill upgraded.", `${u.name} is now Lv ${state.heatUpgrades[id].level}.`, "good");
+          saveState();
+          renderAll();
+        };
+      });
+      body.querySelectorAll("button[data-cancel-module]").forEach(btn => {
+        btn.onclick = () => {
+          if (isJailed()) return toast("Locked up.", "Wait out your sentence.", "bad");
+          state.heatModules = state.heatModules.filter(m => m.id !== btn.dataset.cancelModule);
+          saveState();
+          renderAll();
+        };
+      });
+    }
+    function renderMarket(body) {
+      const mods = getCombinedMods();
+      const lockedGlobal = isJailed();
+      const allItems = [
+        ...WEAPONS.map(w => ({ ...w, kind: "weapon" })),
+        ...CONSUMABLES.map(c => ({ ...c, kind: "consumable" })),
+      ];
+      body.innerHTML = `
+        <div class="small">Market prices improve with Intelligence. Current discount: <span class="mono" data-bind="marketDiscount" data-format="pct"></span>.</div>
+        <div class="divider"></div>
+        <div class="items">
+          ${allItems.map(it => {
+            const price = marketPrice(it.cost);
+            const lockedByRep = state.rep < (it.repReq || 0);
+            const affordable = canAfford(price);
+            const ownedQty = it.kind === "weapon" ? (state.inventory.weapons[it.id] || 0) : (state.inventory.consumables[it.id] || 0);
+            const meta = it.kind === "weapon"
+              ? `<span>Power +${fmt.format(it.power)}</span>`
+              : `<span>Duration ${secondsToHMS(it.durationSec)}</span>`;
+            return `
+              <div class="item">
+                <div class="left">
+                  <div class="badge">${it.kind === "weapon" ? icon("M14 7l-9 9M8 8l8 8M16 4l4 4") : icon("M12 21s-8-4.5-8-11a5 5 0 0 1 9-3 5 5 0 0 1 9 3c0 6.5-8 11-8 11Z")}</div>
+                  <div>
+                    <h4>${escapeHtml(it.name)} ${ownedQty ? `<span class="pill">Owned ${fmt.format(ownedQty)}</span>` : ""}</h4>
+                    <div class="desc">${escapeHtml(it.desc)}</div>
+                    <div class="metaLine">
+                      <span>Price ${money(price)}</span>
+                      <span>Rep ${fmt.format(it.repReq || 0)}</span>
+                      ${meta}
+                    </div>
+                  </div>
+                </div>
+                <div class="actions">
+                  <button class="btn" data-buy="${it.id}" data-kind="${it.kind}" ${lockedGlobal || lockedByRep || !affordable ? "disabled" : ""}>
+                    ${lockedGlobal ? "Locked" : lockedByRep ? "Need Rep" : affordable ? "Buy" : "Need funds"}
+                  </button>
+                  ${it.kind === "consumable" ? `
+                    <button class="btn secondary" data-use="${it.id}" ${lockedGlobal || ownedQty <= 0 || state.action ? "disabled" : ""}>Use</button>
+                  ` : ""}
+                </div>
+              </div>
+            `;
+          }).join("")}
+        </div>
+      `;
+      registerBindings(body);
+      body.querySelectorAll("button[data-buy]").forEach(btn => {
+        btn.onclick = () => {
+          const id = btn.dataset.buy;
+          const kind = btn.dataset.kind;
+          if (isJailed()) return toast("Locked up.", "Wait out your sentence.", "bad");
+          if (kind === "weapon") {
+            const w = WEAPONS.find(x => x.id === id);
+            if (!w) return;
+            const price = marketPrice(w.cost);
+            if (state.rep < w.repReq) return toast("Rep too low.", "", "warn");
+            if (!canAfford(price)) return toast("Not enough money.", "", "warn");
+            pay(price);
+            state.inventory.weapons[w.id] = (state.inventory.weapons[w.id] || 0) + 1;
+            toast("Purchased.", w.name, "good");
+            saveState();
+            renderAll();
+            return;
+          }
+          if (kind === "consumable") {
+            const c = CONSUMABLES.find(x => x.id === id);
+            if (!c) return;
+            const price = marketPrice(c.cost);
+            if (state.rep < c.repReq) return toast("Rep too low.", "", "warn");
+            if (!canAfford(price)) return toast("Not enough money.", "", "warn");
+            pay(price);
+            state.inventory.consumables[c.id] = (state.inventory.consumables[c.id] || 0) + 1;
+            toast("Purchased.", c.name, "good");
+            saveState();
+            renderAll();
+          }
+        };
+      });
+      body.querySelectorAll("button[data-use]").forEach(btn => {
+        btn.onclick = () => {
+          const id = btn.dataset.use;
+          const c = CONSUMABLES.find(x => x.id === id);
+          if (!c) return;
+          if (isJailed()) return toast("Locked up.", "Wait out your sentence.", "bad");
+          const qty = state.inventory.consumables[c.id] || 0;
+          if (qty <= 0) return toast("None owned.", "Buy one first.", "warn");
+          if (state.action) return toast("Busy.", "Finish the current action first.", "warn");
+          state.inventory.consumables[c.id] = qty - 1;
+          const bonusId = `${c.id}_${Math.floor(Math.random() * 1e9)}`;
+          state.bonuses.push({ id: bonusId, name: c.name, endsAt: now() + c.durationSec * 1000, effect: c.effect });
+          toast("Bonus active.", c.name, "good");
+          saveState();
+          renderAll();
+        };
+      });
+    }
+    function renderStats(root) {
+      renderPageHeader("Stats", "Everything that makes your empire dangerous.");
+      const mods = getCombinedMods();
+      const weapon = getEquippedWeapon();
+      const activeBonuses = getActiveBonuses();
+      const skillRows = SKILLS.map(s => {
+        const lvl = getSkillLevel(s.key);
+        const xpNeed = skillXpNeed(lvl);
+        const xpCur = state.skills[s.key]?.xp || 0;
+        const ratio = clamp(xpCur / xpNeed, 0, 1);
+        return `
+          <tr>
+            <td>${escapeHtml(s.name)}</td>
+            <td class="right mono">Lv ${lvl}</td>
+            <td class="right mono">${fmt.format(xpCur)} / ${fmt.format(xpNeed)}</td>
+            <td class="right">
+              <div class="progressWrap" style="height:10px; min-width:140px">
+                <div class="bar" style="width:${ratio*100}%"></div>
+              </div>
+            </td>
+          </tr>
+        `;
+      }).join("");
+      const crewRows = state.crew.owned.length ? state.crew.owned.map(id => {
+        const c = CREW.find(x => x.id === id);
+        if (!c) return "";
+        const isActive = state.crew.active.includes(id);
+        return `
+          <tr>
+            <td>${escapeHtml(c.name)}</td>
+            <td class="right mono">${escapeHtml(c.tier)}</td>
+            <td class="right mono">${money(c.upkeepPerMin)}</td>
+            <td class="right">${isActive ? `<span class="goodTxt">Active</span>` : `<span class="muted">Idle</span>`}</td>
+          </tr>
+        `;
+      }).join("") : `<tr><td colspan="4" class="muted">No crew recruited.</td></tr>`;
+      const bonusesRows = activeBonuses.length ? activeBonuses.map(b => `
+        <tr>
+          <td>${escapeHtml(b.name)}</td>
+          <td class="right mono" data-countdown-ends="${b.endsAt}">${secondsToHMS((b.endsAt - now())/1000)}</td>
+          <td class="right mono">${Object.entries(b.effect).map(([k,v]) => formatEffect(k,v)).join(", ")}</td>
+        </tr>
+      `).join("") : `<tr><td colspan="3" class="muted">No active bonuses.</td></tr>`;
+      const econRows = `
+        <tr><td>Money Bonus</td><td class="right mono" data-bind="moneyMult" data-format="pct"></td></tr>
+        <tr><td>Rep Bonus</td><td class="right mono" data-bind="repMult" data-format="pct"></td></tr>
+        <tr><td>Heat Gain Mod</td><td class="right mono" data-bind="heatGainMult" data-format="signedPct"></td></tr>
+        <tr><td>Heat Control Bonus</td><td class="right mono">+<span data-bind="heatReduceMult" data-format="pct"></span></td></tr>
+        <tr><td>Heat Pressure</td><td class="right mono" data-bind="heatPressure" data-format="pct"></td></tr>
+        <tr><td>Level Momentum</td><td class="right mono">+<span data-bind="levelMomentum" data-format="pct"></span></td></tr>
+        <tr><td>Rep Momentum</td><td class="right mono">+<span data-bind="repMomentum" data-format="pct"></span></td></tr>
+        <tr><td>Cooling Rate</td><td class="right mono">+<span data-bind="heatOvertimeMult" data-format="pct"></span></td></tr>
+        <tr><td>Cooling Duration</td><td class="right mono">+<span data-bind="heatOvertimeDuration" data-format="pct"></span></td></tr>
+        <tr><td>Heat Action Bonus</td><td class="right mono">+<span data-bind="heatActionBonus" data-format="pct"></span></td></tr>
+        <tr><td>Passive Income/min</td><td class="right mono" data-bind="passivePerMin" data-format="money"></td></tr>
+        <tr><td>Crew Upkeep/min</td><td class="right mono" data-bind="upkeepPerMin" data-format="money"></td></tr>
+        <tr><td>Market Discount</td><td class="right mono" data-bind="marketDiscount" data-format="pct"></td></tr>
+        <tr><td>Training Speed</td><td class="right mono">+<span data-bind="trainingSpeed" data-format="pct"></span></td></tr>
+      `;
+      root.innerHTML = `
+        <div class="grid">
+          <div class="card col4">
+            <h3>Core</h3>
+            <table class="table">
+              <tbody>
+                <tr><td>Level</td><td class="right mono" data-bind="level" data-format="int"></td></tr>
+                <tr><td>XP</td><td class="right mono"><span data-bind="xp" data-format="int"></span> / <span data-bind="xpNeed" data-format="int"></span></td></tr>
+                <tr><td>Money</td><td class="right mono" data-bind="money" data-format="money"></td></tr>
+                <tr><td>Rep</td><td class="right mono" data-bind="rep" data-format="int"></td></tr>
+                <tr><td>Influence</td><td class="right mono" data-bind="influence" data-format="int"></td></tr>
+                <tr><td>Heat</td><td class="right mono"><span data-bind="heat" data-format="float1"></span> (<span data-bind="heatTierName"></span>)</td></tr>
+                <tr><td>Heat Points</td><td class="right mono" data-bind="heatPoints" data-format="int"></td></tr>
+                <tr><td>Jail Strikes</td><td class="right mono" data-bind="jailStrikes" data-format="int"></td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="card col4">
+            <h3>Combat</h3>
+            <table class="table">
+              <tbody>
+                <tr><td>Combat Power</td><td class="right mono" data-bind="combatPower" data-format="int"></td></tr>
+                <tr><td>Equipped Weapon</td><td class="right mono">${weapon ? escapeHtml(weapon.name) : "None"}</td></tr>
+                <tr><td>Weapon Power</td><td class="right mono">${weapon ? fmt.format(weapon.power) : "—"}</td></tr>
+                <tr><td>Weapon Efficiency</td><td class="right mono" data-bind="weaponPowerMult" data-format="pct"></td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="card col4">
+            <h3>Infrastructure</h3>
+            <table class="table">
+              <tbody>
+                <tr><td>Active Crew Slots</td><td class="right mono" data-bind="crewSlots" data-format="int"></td></tr>
+                <tr><td>Owned Crew</td><td class="right mono" data-bind="ownedCrew" data-format="int"></td></tr>
+                <tr><td>Active Crew</td><td class="right mono" data-bind="activeCrew" data-format="int"></td></tr>
+                <tr><td>Hideout Upgrades</td><td class="right mono"><span data-bind="hideoutLevels" data-format="int"></span> levels</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="card col12">
+            <h3>Skills</h3>
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>Skill</th>
+                  <th class="right">Level</th>
+                  <th class="right">XP</th>
+                  <th class="right">Progress</th>
+                </tr>
+              </thead>
+              <tbody>${skillRows}</tbody>
+            </table>
+          </div>
+          <div class="card col6">
+            <h3>Economy & Operations</h3>
+            <table class="table"><tbody>${econRows}</tbody></table>
+          </div>
+          <div class="card col6">
+            <h3>Crew</h3>
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th class="right">Tier</th>
+                  <th class="right">Upkeep/min</th>
+                  <th class="right">Status</th>
+                </tr>
+              </thead>
+              <tbody>${crewRows}</tbody>
+            </table>
+          </div>
+          <div class="card col12">
+            <h3>Active Bonuses</h3>
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>Bonus</th>
+                  <th class="right">Time Left</th>
+                  <th class="right">Effects</th>
+                </tr>
+              </thead>
+              <tbody>${bonusesRows}</tbody>
+            </table>
+          </div>
+        </div>
+      `;
+      registerBindings(root);
+    }
+    function renderAll() {
+      renderNav();
+      renderHud();
+      renderActionStrip();
+      const root = document.getElementById("pageRoot");
+      root.innerHTML = "";
+      if (state.ui.page === "dashboard") renderDashboard(root);
+      if (state.ui.page === "jobs") renderJobs(root);
+      if (state.ui.page === "imperium") renderImperium(root);
+      if (state.ui.page === "stats") renderStats(root);
+      const ss = document.getElementById("saveState");
+      if (ss) ss.textContent = "Auto";
+      const as = document.getElementById("actionState");
+      if (as) as.textContent = state.action ? state.action.name : "Idle";
+      const js = document.getElementById("jailState");
+      if (js) js.textContent = isJailed() ? `Jailed (${secondsToHMS(jailTimeLeft())})` : "Free";
+      registerBindings(document);
+      updateActionPanelLive();
+      updateCountdownsLive();
+    }
+    // ---------- Hotkeys ----------
+    window.addEventListener("keydown", (e) => {
+      if (e.target && (e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA")) return;
+      const k = e.key.toLowerCase();
+      if (k === "j") setPage("jobs");
+      if (k === "k") { setPage("imperium"); setImperiumTab("crew"); }
+      if (k === "l") { setPage("imperium"); setImperiumTab("heat"); }
+      if (k === ";") setPage("stats");
+      if (k === "escape" && state.action) cancelAction();
+    });
+    // ---------- Init ----------
+    applyOfflineProgress();
+    renderAll();
+    setInterval(tick, 1000);
+    requestAnimationFrame(uiLoop);
+    window.addEventListener("beforeunload", () => saveState());
+  </script>
+</body>
+</html>

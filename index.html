@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Garage Empire: Idle Horsepower</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="app" data-ui-scale="1">
+    <header class="top-bar">
+      <div class="brand">
+        <h1 class="title">Garage Empire: <span>Idle Horsepower</span></h1>
+        <p class="tagline">Build your legacy from rust to rocket.</p>
+      </div>
+      <div class="hud">
+        <div class="hud-item">
+          <span>Cash</span>
+          <strong id="cashDisplay">$0</strong>
+        </div>
+        <div class="hud-item">
+          <span>CPS</span>
+          <strong id="cpsDisplay">0</strong>
+        </div>
+        <div class="hud-item">
+          <span>Click Power</span>
+          <strong id="clickPowerDisplay">1</strong>
+        </div>
+        <div class="hud-item">
+          <span>Level</span>
+          <strong id="levelDisplay">1</strong>
+        </div>
+        <div class="hud-item xp">
+          <span>XP</span>
+          <div class="xp-bar">
+            <div id="xpFill" class="xp-fill"></div>
+          </div>
+          <small id="xpText">0 / 100</small>
+        </div>
+      </div>
+    </header>
+
+    <nav class="nav">
+      <button class="nav-btn active" data-target="workshop">Workshop</button>
+      <button class="nav-btn" data-target="garage">Garage</button>
+      <button class="nav-btn" data-target="dealership">Dealership</button>
+      <button class="nav-btn" data-target="races">Races</button>
+      <button class="nav-btn" data-target="upgrades">Upgrades</button>
+      <button class="nav-btn" data-target="leaderboard">Leaderboard</button>
+      <button class="nav-btn" data-target="stats">Stats</button>
+    </nav>
+
+    <main>
+      <section id="workshop" class="tab active">
+        <div class="workshop-grid">
+          <div class="rev-panel">
+            <button id="revButton" class="rev-button">Rev Engine</button>
+            <p class="rev-hint">Click to earn cash and XP. Keep the engine humming!</p>
+            <div id="floatingContainer" class="floating-container"></div>
+          </div>
+          <aside class="workshop-stats">
+            <h2>Active Vehicle</h2>
+            <div id="activeVehicleCard" class="vehicle-card"></div>
+            <div class="quick-actions">
+              <button id="manualSave" class="ghost">Manual Save</button>
+              <button id="exportSave" class="ghost">Export Save</button>
+              <button id="importSave" class="ghost">Import Save</button>
+            </div>
+            <div class="daily-bonus" id="dailyBonus"></div>
+          </aside>
+        </div>
+      </section>
+
+      <section id="garage" class="tab">
+        <header class="section-header">
+          <h2>Your Garage</h2>
+          <p>Maintain your fleet and pick the perfect ride for each challenge.</p>
+        </header>
+        <div id="garageGrid" class="card-grid"></div>
+      </section>
+
+      <section id="dealership" class="tab">
+        <header class="section-header">
+          <h2>Dealership</h2>
+          <p>Unlock new tiers of performance as your driver level increases.</p>
+        </header>
+        <div id="dealershipGrid" class="card-grid"></div>
+      </section>
+
+      <section id="races" class="tab">
+        <header class="section-header">
+          <h2>Race Control</h2>
+          <p>Simulate timed CPU races. Better builds lead to faster times.</p>
+        </header>
+        <div id="raceGrid" class="card-grid"></div>
+        <div id="raceResult" class="race-result"></div>
+      </section>
+
+      <section id="upgrades" class="tab">
+        <header class="section-header">
+          <h2>Upgrades</h2>
+          <p>Stack workshop improvements and tune your active vehicle.</p>
+        </header>
+        <div class="upgrade-columns">
+          <div>
+            <h3>Workshop Upgrades</h3>
+            <div id="workshopUpgrades" class="card-grid"></div>
+          </div>
+          <div>
+            <h3>Vehicle Upgrades</h3>
+            <div id="vehicleUpgrades" class="card-grid"></div>
+          </div>
+        </div>
+      </section>
+
+      <section id="leaderboard" class="tab">
+        <header class="section-header">
+          <h2>Leaderboard</h2>
+          <p>Personal bests and your last 10 runs.</p>
+        </header>
+        <div id="leaderboardGrid" class="card-grid"></div>
+      </section>
+
+      <section id="stats" class="tab">
+        <header class="section-header">
+          <h2>Career Stats</h2>
+          <p>Track your progress, achievements, and prestige multiplier.</p>
+        </header>
+        <div class="stats-grid">
+          <div id="statsPanel" class="stats-panel"></div>
+          <div id="achievementPanel" class="stats-panel"></div>
+          <div class="stats-panel settings-panel">
+            <h3>Settings</h3>
+            <label class="toggle">
+              <input type="checkbox" id="soundToggle" />
+              <span>Sound Effects</span>
+            </label>
+            <label class="toggle">
+              <input type="checkbox" id="motionToggle" />
+              <span>Reduced Motion</span>
+            </label>
+            <label class="slider">
+              <span>UI Scale</span>
+              <input type="range" id="scaleSlider" min="0.8" max="1.2" step="0.05" />
+            </label>
+            <button id="resetGame" class="danger">Reset Game</button>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <div id="menuOverlay" class="menu-overlay">
+    <div class="menu-card">
+      <h2 class="menu-title">Garage Empire</h2>
+      <p class="menu-subtitle">Idle horsepower, endless upgrades.</p>
+      <button id="startBtn">Start / Continue</button>
+      <button id="newGameBtn" class="ghost">New Game</button>
+      <button id="openSettingsBtn" class="ghost">Settings</button>
+      <button id="creditsBtn" class="ghost">Credits</button>
+      <div id="creditsPanel" class="credits hidden">
+        <p>Designed by you. Built for the neon garage dream.</p>
+      </div>
+    </div>
+  </div>
+
+  <div id="importModal" class="modal hidden">
+    <div class="modal-card">
+      <h3>Import Save</h3>
+      <textarea id="importText" rows="6" placeholder="Paste save JSON here..."></textarea>
+      <div class="modal-actions">
+        <button id="confirmImport">Import</button>
+        <button id="cancelImport" class="ghost">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="tooltip" class="tooltip hidden"></div>
+
+  <script src="app.js"></script>
+</body>
+</html>

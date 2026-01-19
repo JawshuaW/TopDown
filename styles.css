@@ -1,0 +1,423 @@
+:root {
+  color-scheme: dark;
+  --bg: #0b0f1f;
+  --panel: #121a2f;
+  --panel-light: #1c2845;
+  --accent: #5ff0ff;
+  --accent-2: #ff6ef2;
+  --accent-3: #f4ff5f;
+  --text: #e7edff;
+  --muted: #9bb0d3;
+  --danger: #ff4f5e;
+  --success: #4dffb5;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  font-family: "Inter", "Segoe UI", sans-serif;
+}
+
+body {
+  background: radial-gradient(circle at top, #101a36 0%, #060912 70%);
+  color: var(--text);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+.app {
+  padding: 24px 32px 48px;
+  transform: scale(var(--ui-scale, 1));
+  transform-origin: top center;
+}
+
+.top-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 24px;
+  margin-bottom: 16px;
+}
+
+.brand {
+  max-width: 340px;
+}
+
+.title {
+  font-size: 2rem;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  animation: glow 3s ease-in-out infinite;
+}
+
+.title span {
+  color: var(--accent);
+}
+
+.tagline {
+  color: var(--muted);
+  margin-top: 8px;
+}
+
+@keyframes glow {
+  0%, 100% { text-shadow: 0 0 12px rgba(95, 240, 255, 0.6); }
+  50% { text-shadow: 0 0 20px rgba(255, 110, 242, 0.75); }
+}
+
+.hud {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.hud-item {
+  background: var(--panel);
+  padding: 10px 14px;
+  border-radius: 12px;
+  min-width: 110px;
+  box-shadow: 0 0 0 1px rgba(95, 240, 255, 0.08);
+}
+
+.hud-item span {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--muted);
+}
+
+.hud-item strong {
+  display: block;
+  margin-top: 4px;
+  font-size: 1.1rem;
+}
+
+.xp {
+  min-width: 160px;
+}
+
+.xp-bar {
+  height: 6px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 999px;
+  overflow: hidden;
+  margin-top: 6px;
+}
+
+.xp-fill {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, var(--accent), var(--accent-2));
+  transition: width 0.2s ease;
+}
+
+.nav {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 24px;
+}
+
+.nav-btn {
+  border: none;
+  padding: 10px 18px;
+  border-radius: 999px;
+  background: var(--panel-light);
+  color: var(--text);
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.nav-btn.active,
+.nav-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 0 16px rgba(95, 240, 255, 0.3);
+}
+
+.tab {
+  display: none;
+  animation: fadeIn 0.4s ease;
+}
+
+.tab.active {
+  display: block;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.section-header {
+  margin-bottom: 16px;
+}
+
+.section-header p {
+  color: var(--muted);
+  margin-top: 4px;
+}
+
+.workshop-grid {
+  display: grid;
+  grid-template-columns: minmax(260px, 1fr) minmax(280px, 360px);
+  gap: 24px;
+}
+
+.rev-panel {
+  background: linear-gradient(135deg, rgba(95, 240, 255, 0.08), rgba(255, 110, 242, 0.08));
+  border-radius: 24px;
+  padding: 32px;
+  position: relative;
+  min-height: 360px;
+  overflow: hidden;
+}
+
+.rev-button {
+  width: 100%;
+  min-height: 180px;
+  border-radius: 24px;
+  background: radial-gradient(circle, rgba(95, 240, 255, 0.3), rgba(12, 19, 40, 0.9));
+  border: 1px solid rgba(95, 240, 255, 0.3);
+  color: var(--text);
+  font-size: 1.6rem;
+  cursor: pointer;
+  transition: transform 0.15s ease;
+}
+
+.rev-button:active {
+  transform: scale(0.98);
+}
+
+.rev-hint {
+  margin-top: 12px;
+  color: var(--muted);
+}
+
+.floating-container {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.float-text {
+  position: absolute;
+  font-weight: bold;
+  color: var(--accent-3);
+  animation: floatUp 1.2s ease forwards;
+}
+
+@keyframes floatUp {
+  from { opacity: 0; transform: translateY(0); }
+  to { opacity: 1; transform: translateY(-80px); }
+}
+
+.workshop-stats {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.vehicle-card,
+.stats-panel,
+.race-result,
+.menu-card,
+.modal-card {
+  background: var(--panel);
+  border-radius: 16px;
+  padding: 16px;
+  box-shadow: 0 0 0 1px rgba(95, 240, 255, 0.08);
+}
+
+.vehicle-card h3 {
+  margin-bottom: 6px;
+}
+
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 16px;
+}
+
+.card {
+  background: var(--panel-light);
+  border-radius: 16px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  position: relative;
+}
+
+.card small {
+  color: var(--muted);
+}
+
+.card button {
+  margin-top: auto;
+}
+
+button {
+  border: none;
+  padding: 10px 14px;
+  border-radius: 12px;
+  background: linear-gradient(120deg, var(--accent), var(--accent-2));
+  color: #0b0f1f;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+}
+
+button:hover {
+  transform: translateY(-1px);
+}
+
+button.ghost {
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: var(--text);
+}
+
+button.danger {
+  background: var(--danger);
+  color: white;
+}
+
+.quick-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.daily-bonus {
+  color: var(--success);
+  font-size: 0.9rem;
+}
+
+.race-result {
+  margin-top: 16px;
+}
+
+.upgrade-columns {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 24px;
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 16px;
+}
+
+.stats-panel h3 {
+  margin-bottom: 8px;
+}
+
+.stats-panel ul {
+  list-style: none;
+  display: grid;
+  gap: 6px;
+}
+
+.toggle,
+.slider {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.menu-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(6, 9, 18, 0.9);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+}
+
+.menu-card {
+  width: min(420px, 90vw);
+  text-align: center;
+}
+
+.menu-title {
+  font-size: 2rem;
+  margin-bottom: 6px;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+.menu-subtitle {
+  color: var(--muted);
+  margin-bottom: 16px;
+}
+
+.menu-card button {
+  width: 100%;
+  margin-top: 10px;
+}
+
+.credits {
+  margin-top: 12px;
+  color: var(--muted);
+}
+
+.hidden {
+  display: none !important;
+}
+
+.modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 20;
+}
+
+.modal-card textarea {
+  width: 100%;
+  margin-top: 10px;
+  background: #0b0f1f;
+  color: var(--text);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 8px;
+  border-radius: 8px;
+}
+
+.modal-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.tooltip {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  background: var(--panel-light);
+  border-radius: 12px;
+  padding: 12px 14px;
+  max-width: 240px;
+  box-shadow: 0 0 16px rgba(0, 0, 0, 0.4);
+  z-index: 30;
+}
+
+@media (max-width: 960px) {
+  .top-bar {
+    flex-direction: column;
+  }
+
+  .workshop-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.reduced-motion * {
+  animation: none !important;
+  transition: none !important;
+}
